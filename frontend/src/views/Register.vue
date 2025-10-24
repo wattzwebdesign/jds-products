@@ -2,7 +2,7 @@
   <div class="auth-container">
     <div class="auth-card">
       <h1>Register</h1>
-      <p class="subtitle">Create an account to access JDS product lookup</p>
+      <p class="subtitle">Create an account to access product catalog</p>
 
       <form @submit.prevent="handleRegister">
         <div class="form-group">
@@ -43,15 +43,15 @@
         </div>
 
         <div class="form-group">
-          <label for="jdsApiToken">JDS API Token</label>
+          <label for="jdsApiToken">API Token</label>
           <input
             id="jdsApiToken"
             v-model="jdsApiToken"
             type="text"
-            placeholder="Enter your JDS API token"
+            placeholder="Enter your API token"
             required
           />
-          <small class="help-text">You can find your API token in your JDS account settings</small>
+          <small class="help-text">You can find your API token in your account settings</small>
         </div>
 
         <div v-if="errorMessage" class="error-message">
@@ -101,9 +101,9 @@ const handleRegister = async () => {
     return;
   }
 
-  // Validate JDS token
+  // Validate API token
   if (!jdsApiToken.value || jdsApiToken.value.trim() === '') {
-    errorMessage.value = 'JDS API token is required';
+    errorMessage.value = 'API token is required';
     return;
   }
 

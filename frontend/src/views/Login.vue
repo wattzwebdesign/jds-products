@@ -2,7 +2,7 @@
   <div class="auth-container">
     <div class="auth-card">
       <h1>Login</h1>
-      <p class="subtitle">Sign in to access JDS product lookup</p>
+      <p class="subtitle">Sign in to access product catalog</p>
 
       <form @submit.prevent="handleLogin">
         <div class="form-group">

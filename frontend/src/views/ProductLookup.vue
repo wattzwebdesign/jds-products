@@ -2,7 +2,7 @@
   <div class="product-lookup">
     <header class="header">
       <div class="header-content">
-        <h1>JDS Product Lookup</h1>
+        <h1>Product Catalog</h1>
 
         <!-- Navigation Links -->
         <nav class="nav-links">

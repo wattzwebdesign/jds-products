@@ -2,7 +2,7 @@
   <div class="product-search">
     <header class="header">
       <div class="header-content">
-        <h1>JDS Product Search</h1>
+        <h1>Product Catalog</h1>
         <div class="user-info">
           <router-link v-if="!authStore.isAuthenticated" to="/login" class="btn btn-login">Login</router-link>
           <router-link v-else to="/products" class="btn btn-login">Go to Products</router-link>

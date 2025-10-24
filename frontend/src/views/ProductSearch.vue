@@ -2,7 +2,7 @@
   <div class="product-search">
     <header class="header">
       <div class="header-content">
-        <h1>JDS Product Search</h1>
+        <h1>Product Catalog</h1>
 
         <!-- Navigation Links -->
         <nav class="nav-links">
@@ -40,20 +40,34 @@
           </svg>
         </div>
 
-        <button @click="showFilters = !showFilters" class="btn btn-filter">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-            <line x1="4" y1="21" x2="4" y2="14" stroke-width="2" stroke-linecap="round"/>
-            <line x1="4" y1="10" x2="4" y2="3" stroke-width="2" stroke-linecap="round"/>
-            <line x1="12" y1="21" x2="12" y2="12" stroke-width="2" stroke-linecap="round"/>
-            <line x1="12" y1="8" x2="12" y2="3" stroke-width="2" stroke-linecap="round"/>
-            <line x1="20" y1="21" x2="20" y2="16" stroke-width="2" stroke-linecap="round"/>
-            <line x1="20" y1="12" x2="20" y2="3" stroke-width="2" stroke-linecap="round"/>
-            <line x1="1" y1="14" x2="7" y2="14" stroke-width="2" stroke-linecap="round"/>
-            <line x1="9" y1="8" x2="15" y2="8" stroke-width="2" stroke-linecap="round"/>
-            <line x1="17" y1="16" x2="23" y2="16" stroke-width="2" stroke-linecap="round"/>
-          </svg>
-          Filters
-        </button>
+        <div class="search-actions">
+          <button @click="showFilters = !showFilters" class="btn btn-filter">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <line x1="4" y1="21" x2="4" y2="14" stroke-width="2" stroke-linecap="round"/>
+              <line x1="4" y1="10" x2="4" y2="3" stroke-width="2" stroke-linecap="round"/>
+              <line x1="12" y1="21" x2="12" y2="12" stroke-width="2" stroke-linecap="round"/>
+              <line x1="12" y1="8" x2="12" y2="3" stroke-width="2" stroke-linecap="round"/>
+              <line x1="20" y1="21" x2="20" y2="16" stroke-width="2" stroke-linecap="round"/>
+              <line x1="20" y1="12" x2="20" y2="3" stroke-width="2" stroke-linecap="round"/>
+              <line x1="1" y1="14" x2="7" y2="14" stroke-width="2" stroke-linecap="round"/>
+              <line x1="9" y1="8" x2="15" y2="8" stroke-width="2" stroke-linecap="round"/>
+              <line x1="17" y1="16" x2="23" y2="16" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+            Filters
+          </button>
+
+          <button
+            v-if="hasSearched || searchQuery || selectedColor"
+            @click="clearAllSearch"
+            class="btn btn-clear-all"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <line x1="18" y1="6" x2="6" y2="18" stroke-width="2" stroke-linecap="round"/>
+              <line x1="6" y1="6" x2="18" y2="18" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+            Clear All
+          </button>
+        </div>
       </div>
 
       <div v-if="showFilters" class="filters-panel">
@@ -413,6 +427,28 @@ const clearColorFilter = () => {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 };
 
+const clearAllSearch = () => {
+  // Reset all search parameters
+  searchQuery.value = '';
+  selectedColor.value = '';
+  colorSearchQuery.value = '';
+  showColorDropdown.value = false;
+  showFilters.value = false;
+  hasSearched.value = false;
+  products.value = [];
+  pagination.value = {
+    page: 1,
+    limit: 20,
+    total: 0,
+    totalPages: 0
+  };
+  errorMessage.value = '';
+
+  // Clear URL parameters
+  router.replace({ query: {} });
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+};
+
 const loadColors = async () => {
   try {
     const result = await productsAPI.getColors();
@@ -724,6 +760,12 @@ onMounted(() => {
   color: #999;
 }
 
+.search-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
 .btn-filter {
   background: white;
   color: #0F3F92;
@@ -736,6 +778,20 @@ onMounted(() => {
 .btn-filter:hover {
   background: #0F3F92;
   color: white;
+}
+
+.btn-clear-all {
+  background: #f44336;
+  color: white;
+  border: 1px solid #f44336;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-clear-all:hover {
+  background: #d32f2f;
+  border-color: #d32f2f;
 }
 
 .filters-panel {

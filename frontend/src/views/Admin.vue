@@ -2,7 +2,7 @@
   <div class="admin-page">
     <header class="header">
       <div class="header-content">
-        <h1>Admin - Product Import</h1>
+        <h1>Admin Panel</h1>
         <router-link to="/products" class="btn btn-secondary">← Back to Products</router-link>
       </div>
     </header>
@@ -12,7 +12,7 @@
       <div class="import-section sync-section">
         <h2>Automatic Product Sync</h2>
         <p class="instructions">
-          Sync products directly from JDS master data.
+          Sync products directly from master data source.
           Scheduled to run automatically every Sunday at midnight.
         </p>
 
@@ -50,7 +50,7 @@
           :disabled="syncing || syncStatus?.isRunning"
           v-if="!syncStatus?.isRunning"
         >
-          Sync from JDS Now
+          Sync Now
         </button>
 
         <div v-if="syncResult && !syncing" class="result-message" :class="syncResult.success ? 'success' : 'error'">
@@ -70,7 +70,7 @@
       <div class="import-section">
         <h2>Manual Import from Excel</h2>
         <p class="instructions">
-          Upload an Excel file (.xlsx or .xls) with your JDS product catalog.
+          Upload an Excel file (.xlsx or .xls) with your product catalog.
           Use this for one-time imports or custom product data.
         </p>
 
