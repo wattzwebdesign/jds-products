@@ -43,15 +43,18 @@
         </div>
 
         <div class="form-group">
-          <label for="jdsApiToken">API Token</label>
+          <label for="jdsApiToken">JDS API Token</label>
           <input
             id="jdsApiToken"
             v-model="jdsApiToken"
             type="text"
-            placeholder="Enter your API token"
+            placeholder="Enter your JDS API token"
             required
           />
-          <small class="help-text">You can find your API token in your account settings</small>
+          <small class="help-text">
+            Get your API token from
+            <a href="https://jdsindustries.com/?view=apiRequest" target="_blank" rel="noopener noreferrer">JDS Industries</a>
+          </small>
         </div>
 
         <div v-if="errorMessage" class="error-message">
@@ -101,9 +104,9 @@ const handleRegister = async () => {
     return;
   }
 
-  // Validate API token
+  // Validate JDS API token
   if (!jdsApiToken.value || jdsApiToken.value.trim() === '') {
-    errorMessage.value = 'API token is required';
+    errorMessage.value = 'JDS API token is required';
     return;
   }
 
@@ -228,6 +231,16 @@ input:focus {
 }
 
 .auth-link a:hover {
+  text-decoration: underline;
+}
+
+.help-text a {
+  color: #0F3F92;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.help-text a:hover {
   text-decoration: underline;
 }
 

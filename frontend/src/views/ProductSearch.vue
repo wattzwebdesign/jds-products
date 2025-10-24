@@ -1,28 +1,6 @@
 <template>
   <div class="product-search">
-    <header class="header">
-      <div class="header-content">
-        <h1>Product Catalog</h1>
-
-        <!-- Navigation Links -->
-        <nav class="nav-links">
-          <router-link to="/products" class="nav-link">All Products</router-link>
-          <router-link v-if="authStore.isAuthenticated" to="/sku-lookup" class="nav-link">Bulk SKU Search</router-link>
-        </nav>
-
-        <div class="user-info">
-          <!-- Show when NOT authenticated -->
-          <router-link v-if="!authStore.isAuthenticated" to="/login" class="btn btn-login">Login</router-link>
-
-          <!-- Show when authenticated -->
-          <template v-else>
-            <router-link to="/admin" class="btn btn-admin">⚙ Admin</router-link>
-            <span>{{ authStore.user?.username }}</span>
-            <button @click="handleLogout" class="btn btn-logout">Logout</button>
-          </template>
-        </div>
-      </div>
-    </header>
+    <AppHeader />
 
     <main class="main-content">
       <div class="search-header">
@@ -287,6 +265,7 @@ import { useRouter, useRoute } from 'vue-router';
 import { useAuthStore } from '../stores/auth';
 import { productsAPI } from '../services/api';
 import ProductCard from '../components/ProductCard.vue';
+import AppHeader from '../components/AppHeader.vue';
 
 const router = useRouter();
 const route = useRoute();
@@ -561,11 +540,6 @@ const handleImageLoadSuccess = () => {
   imageLoadError.value = false;
 };
 
-const handleLogout = () => {
-  authStore.logout();
-  router.push('/login');
-};
-
 const formatPrice = (price) => {
   if (price === null || price === undefined) return '-';
   return Number(price).toFixed(2);
@@ -606,118 +580,6 @@ onMounted(() => {
 .product-search {
   min-height: 100vh;
   background: #f5f5f5;
-}
-
-.header {
-  background: #0F3F92;
-  color: white;
-  padding: 20px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.header-content {
-  max-width: 1400px;
-  margin: 0 auto;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 30px;
-}
-
-.header h1 {
-  margin: 0;
-  font-size: 24px;
-  white-space: nowrap;
-}
-
-.nav-links {
-  display: flex;
-  gap: 20px;
-  align-items: center;
-  flex: 1;
-}
-
-.nav-link {
-  color: white;
-  text-decoration: none;
-  font-size: 15px;
-  font-weight: 500;
-  padding: 8px 16px;
-  border-radius: 6px;
-  transition: background 0.2s;
-  white-space: nowrap;
-}
-
-.nav-link:hover {
-  background: rgba(255, 255, 255, 0.15);
-}
-
-.nav-link.router-link-active {
-  background: rgba(255, 255, 255, 0.2);
-  font-weight: 600;
-}
-
-.user-info {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-
-.user-info span {
-  font-size: 14px;
-}
-
-.btn {
-  padding: 8px 16px;
-  border: none;
-  border-radius: 6px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s;
-}
-
-.btn-lookup {
-  background: rgba(255, 255, 255, 0.2);
-  color: white;
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  text-decoration: none;
-}
-
-.btn-lookup:hover {
-  background: rgba(255, 255, 255, 0.3);
-}
-
-.btn-admin {
-  background: rgba(255, 255, 255, 0.2);
-  color: white;
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  text-decoration: none;
-}
-
-.btn-admin:hover {
-  background: rgba(255, 255, 255, 0.3);
-}
-
-.btn-logout {
-  background: rgba(255, 255, 255, 0.2);
-  color: white;
-  border: 1px solid rgba(255, 255, 255, 0.3);
-}
-
-.btn-logout:hover {
-  background: rgba(255, 255, 255, 0.3);
-}
-
-.btn-login {
-  background: rgba(255, 255, 255, 0.2);
-  color: white;
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  text-decoration: none;
-}
-
-.btn-login:hover {
-  background: rgba(255, 255, 255, 0.3);
 }
 
 .main-content {
@@ -1073,17 +935,21 @@ onMounted(() => {
 .welcome {
   text-align: center;
   padding: 80px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
 }
 
 .no-results svg,
 .welcome svg {
   color: #ddd;
-  margin-bottom: 24px;
+  margin: 0;
 }
 
 .no-results p,
 .welcome h2 {
-  margin: 0 0 8px 0;
+  margin: 0;
   color: #333;
   font-size: 20px;
 }
@@ -1092,10 +958,11 @@ onMounted(() => {
 .welcome p {
   color: #999;
   font-size: 14px;
+  margin: 0;
 }
 
 .btn-add-missing {
-  margin-top: 24px;
+  margin-top: 8px;
   padding: 12px 24px;
   background: #0F3F92;
   color: white;
