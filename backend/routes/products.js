@@ -73,20 +73,42 @@ router.post('/search', async (req, res) => {
     // If no conditions were added, remove the AND wrapper
     const finalWhere = where.AND.length > 0 ? where : {};
 
-    // Execute search
-    const [products, total] = await Promise.all([
+    // Execute search - fetch more to sort by relevance, then paginate
+    const [allProducts, total] = await Promise.all([
       prisma.product.findMany({
         where: finalWhere,
-        skip,
-        take: limit,
         orderBy: { name: 'asc' }
       }),
       prisma.product.count({ where: finalWhere })
     ]);
 
+    // Sort by relevance if there's a search query
+    let products = allProducts;
+    if (query && query.trim()) {
+      const searchLower = query.toLowerCase();
+      products = allProducts.sort((a, b) => {
+        const aNameMatch = a.name?.toLowerCase().includes(searchLower);
+        const bNameMatch = b.name?.toLowerCase().includes(searchLower);
+        const aDescMatch = a.description?.toLowerCase().includes(searchLower);
+        const bDescMatch = b.description?.toLowerCase().includes(searchLower);
+
+        // Priority: name match > description match
+        if (aNameMatch && !bNameMatch) return -1;
+        if (!aNameMatch && bNameMatch) return 1;
+        if (aDescMatch && !bDescMatch) return -1;
+        if (!aDescMatch && bDescMatch) return 1;
+
+        // If same relevance, sort by name
+        return a.name.localeCompare(b.name);
+      });
+    }
+
+    // Apply pagination to sorted results
+    const paginatedProducts = products.slice(skip, skip + limit);
+
     res.json({
       success: true,
-      products,
+      products: paginatedProducts,
       pagination: {
         page,
         limit,

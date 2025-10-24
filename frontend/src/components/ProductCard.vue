@@ -1,6 +1,6 @@
 <template>
   <div class="product-card">
-    <div class="product-image">
+    <div class="product-image" @click="openLightbox" :class="{ 'clickable': product.imageUrl }">
       <img
         v-if="product.imageUrl"
         :src="product.imageUrl"
@@ -14,6 +14,13 @@
           <polyline points="21 15 16 10 5 21" stroke-width="2"/>
         </svg>
         <span>No Image</span>
+      </div>
+      <div v-if="product.imageUrl" class="zoom-indicator">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <circle cx="11" cy="11" r="8" stroke-width="2"/>
+          <path d="m21 21-4.35-4.35" stroke-width="2" stroke-linecap="round"/>
+          <path d="M11 8v6M8 11h6" stroke-width="2" stroke-linecap="round"/>
+        </svg>
       </div>
     </div>
 
@@ -63,6 +70,15 @@
         View Inventory & Pricing
       </button>
     </div>
+
+    <!-- Lightbox -->
+    <div v-if="showLightbox" class="lightbox-overlay" @click="closeLightbox">
+      <button @click="closeLightbox" class="lightbox-close">×</button>
+      <div class="lightbox-content" @click.stop>
+        <img :src="product.imageUrl" :alt="product.name" />
+        <p class="lightbox-caption">{{ product.name }}</p>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -82,6 +98,7 @@ const props = defineProps({
 
 const showFullDescription = ref(false);
 const imageError = ref(false);
+const showLightbox = ref(false);
 
 const hasLongDescription = computed(() => {
   const desc = props.product.description || '';
@@ -121,6 +138,18 @@ const formatPrice = (price) => {
 const handleImageError = (e) => {
   imageError.value = true;
   e.target.style.display = 'none';
+};
+
+const openLightbox = () => {
+  if (props.product.imageUrl) {
+    showLightbox.value = true;
+    document.body.style.overflow = 'hidden'; // Prevent background scrolling
+  }
+};
+
+const closeLightbox = () => {
+  showLightbox.value = false;
+  document.body.style.overflow = ''; // Restore scrolling
 };
 </script>
 
@@ -301,5 +330,99 @@ const handleImageError = (e) => {
 
 .btn-view-details svg {
   flex-shrink: 0;
+}
+
+/* Lightbox Styles */
+.product-image.clickable {
+  cursor: pointer;
+  position: relative;
+}
+
+.product-image.clickable:hover .zoom-indicator {
+  opacity: 1;
+}
+
+.zoom-indicator {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  background: rgba(0, 0, 0, 0.6);
+  color: white;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.3s;
+  pointer-events: none;
+}
+
+.lightbox-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 20px;
+  animation: fadeIn 0.2s;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.lightbox-close {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: rgba(255, 255, 255, 0.2);
+  border: 2px solid white;
+  color: white;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  font-size: 32px;
+  line-height: 1;
+  cursor: pointer;
+  transition: all 0.3s;
+  z-index: 10000;
+}
+
+.lightbox-close:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: rotate(90deg);
+}
+
+.lightbox-content {
+  max-width: 90vw;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+.lightbox-content img {
+  max-width: 100%;
+  max-height: 80vh;
+  object-fit: contain;
+  border-radius: 8px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+}
+
+.lightbox-caption {
+  color: white;
+  font-size: 18px;
+  text-align: center;
+  margin: 0;
+  padding: 0 20px;
 }
 </style>

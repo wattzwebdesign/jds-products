@@ -23,11 +23,19 @@
             id="password"
             v-model="password"
             type="password"
-            placeholder="At least 6 characters"
+            placeholder="At least 8 characters"
             required
             autocomplete="new-password"
-            minlength="6"
+            minlength="8"
+            @input="checkPasswordStrength"
           />
+          <div v-if="password" class="password-strength">
+            <div class="strength-bar">
+              <div class="strength-fill" :class="passwordStrength.class" :style="{ width: passwordStrength.percentage + '%' }"></div>
+            </div>
+            <span class="strength-text" :class="passwordStrength.class">{{ passwordStrength.text }}</span>
+          </div>
+          <small class="help-text">Must include uppercase, lowercase, number, and special character</small>
         </div>
 
         <div class="form-group">
@@ -88,6 +96,37 @@ const confirmPassword = ref('');
 const jdsApiToken = ref('');
 const errorMessage = ref('');
 const loading = ref(false);
+const passwordStrength = ref({
+  percentage: 0,
+  text: '',
+  class: ''
+});
+
+const checkPasswordStrength = () => {
+  const pass = password.value;
+  let strength = 0;
+
+  // Check length
+  if (pass.length >= 8) strength += 25;
+  if (pass.length >= 12) strength += 10;
+
+  // Check for character types
+  if (/[a-z]/.test(pass)) strength += 15;
+  if (/[A-Z]/.test(pass)) strength += 15;
+  if (/[0-9]/.test(pass)) strength += 15;
+  if (/[!@#$%^&*(),.?":{}|<>]/.test(pass)) strength += 20;
+
+  // Update strength indicator
+  if (strength < 40) {
+    passwordStrength.value = { percentage: strength, text: 'Weak', class: 'weak' };
+  } else if (strength < 70) {
+    passwordStrength.value = { percentage: strength, text: 'Fair', class: 'fair' };
+  } else if (strength < 90) {
+    passwordStrength.value = { percentage: strength, text: 'Good', class: 'good' };
+  } else {
+    passwordStrength.value = { percentage: 100, text: 'Strong', class: 'strong' };
+  }
+};
 
 const handleRegister = async () => {
   errorMessage.value = '';
@@ -99,8 +138,19 @@ const handleRegister = async () => {
   }
 
   // Validate password length
-  if (password.value.length < 6) {
-    errorMessage.value = 'Password must be at least 6 characters';
+  if (password.value.length < 8) {
+    errorMessage.value = 'Password must be at least 8 characters';
+    return;
+  }
+
+  // Validate password strength
+  const hasUpperCase = /[A-Z]/.test(password.value);
+  const hasLowerCase = /[a-z]/.test(password.value);
+  const hasNumber = /[0-9]/.test(password.value);
+  const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password.value);
+
+  if (!hasUpperCase || !hasLowerCase || !hasNumber || !hasSpecialChar) {
+    errorMessage.value = 'Password must include uppercase, lowercase, number, and special character';
     return;
   }
 
@@ -249,5 +299,60 @@ input:focus {
   margin-top: 4px;
   color: #999;
   font-size: 12px;
+}
+
+.password-strength {
+  margin-top: 8px;
+}
+
+.strength-bar {
+  height: 6px;
+  background: #e0e0e0;
+  border-radius: 3px;
+  overflow: hidden;
+  margin-bottom: 6px;
+}
+
+.strength-fill {
+  height: 100%;
+  transition: all 0.3s ease;
+  border-radius: 3px;
+}
+
+.strength-fill.weak {
+  background: #f44336;
+}
+
+.strength-fill.fair {
+  background: #ff9800;
+}
+
+.strength-fill.good {
+  background: #2196F3;
+}
+
+.strength-fill.strong {
+  background: #4CAF50;
+}
+
+.strength-text {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.strength-text.weak {
+  color: #f44336;
+}
+
+.strength-text.fair {
+  color: #ff9800;
+}
+
+.strength-text.good {
+  color: #2196F3;
+}
+
+.strength-text.strong {
+  color: #4CAF50;
 }
 </style>

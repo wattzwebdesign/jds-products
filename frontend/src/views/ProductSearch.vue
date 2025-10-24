@@ -171,8 +171,8 @@
         <p>No products found</p>
         <span>Try adjusting your search or filters</span>
 
-        <!-- Add Missing Product button - only show when authenticated -->
-        <router-link v-if="authStore.isAuthenticated" to="/sku-lookup" class="btn btn-add-missing">
+        <!-- Add Missing Product button - only show when user is admin -->
+        <router-link v-if="authStore.isAdmin" to="/sku-lookup" class="btn btn-add-missing">
           📦 Add Missing Product
         </router-link>
       </div>
