@@ -73,15 +73,15 @@ router.beforeEach((to, from, next) => {
 });
 
 // Track page views with Fathom Analytics after each route change
-router.afterEach((to) => {
+router.afterEach(() => {
   // Check if Fathom is loaded
   if (window.fathom) {
-    // Track pageview with the hash path (e.g., /#/products becomes /products)
-    const trackingUrl = window.location.origin + to.fullPath;
-    console.log('Router tracking pageview:', trackingUrl);
-    console.log('Route fullPath:', to.fullPath);
+    // For SPAs with hash routing, pass the full URL including hash fragment
+    // See: https://usefathom.com/docs/script/script-advanced#single-page-applications
+    const fullUrl = window.location.href;
+    console.log('Router tracking pageview (SPA hash):', fullUrl);
     window.fathom.trackPageview({
-      url: trackingUrl
+      url: fullUrl
     });
   }
 });

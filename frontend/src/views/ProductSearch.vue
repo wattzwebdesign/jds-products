@@ -517,19 +517,23 @@ const handleProductClick = async (product) => {
   const currentQuery = { ...route.query, sku: product.sku };
   await router.push({ query: currentQuery });
 
-  // Track modal view as pageview in Fathom AFTER URL update
+  // Track modal view as pageview in Fathom (SPA hash routing requires full URL)
   if (window.fathom) {
-    // Use nextTick to ensure URL has updated
     setTimeout(() => {
-      // Extract hash path including query params (e.g., /products?sku=ABC123)
-      const hashPath = window.location.hash.substring(1); // Remove the # symbol
-      const trackingUrl = window.location.origin + hashPath;
-      console.log('Tracking modal pageview:', trackingUrl);
-      console.log('Full window.location.href:', window.location.href);
+      // For hash routing, pass the full href including the hash fragment
+      const fullUrl = window.location.href;
+      console.log('Tracking modal pageview (SPA hash):', fullUrl);
       window.fathom.trackPageview({
-        url: trackingUrl
+        url: fullUrl
       });
-    }, 50);
+
+      // Also track as custom event for product analytics
+      const eventName = `Product View: ${product.sku} - ${product.name?.substring(0, 50) || 'Unknown'}`;
+      window.fathom.trackEvent(eventName, {
+        _site_id: 'UMVXBRTN',
+        _value: 1
+      });
+    }, 100);
   }
 
   try {
@@ -603,18 +607,23 @@ const openModalFromUrl = async (sku) => {
       liveProduct.value = null;
       imageLoadError.value = false;
 
-      // Track modal view as pageview in Fathom
+      // Track modal view as pageview in Fathom (SPA hash routing requires full URL)
       if (window.fathom) {
         setTimeout(() => {
-          // Extract hash path including query params (e.g., /products?sku=ABC123)
-          const hashPath = window.location.hash.substring(1); // Remove the # symbol
-          const trackingUrl = window.location.origin + hashPath;
-          console.log('Tracking modal pageview from URL:', trackingUrl);
-          console.log('Full window.location.href:', window.location.href);
+          // For hash routing, pass the full href including the hash fragment
+          const fullUrl = window.location.href;
+          console.log('Tracking modal pageview from URL (SPA hash):', fullUrl);
           window.fathom.trackPageview({
-            url: trackingUrl
+            url: fullUrl
           });
-        }, 50);
+
+          // Also track as custom event for product analytics
+          const eventName = `Product View: ${sku} - ${product.name?.substring(0, 50) || 'Unknown'}`;
+          window.fathom.trackEvent(eventName, {
+            _site_id: 'UMVXBRTN',
+            _value: 1
+          });
+        }, 100);
       }
 
       try {
