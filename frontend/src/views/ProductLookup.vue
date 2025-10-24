@@ -177,7 +177,7 @@ const handleLogout = () => {
 }
 
 .header {
-  background: #667eea;
+  background: #0F3F92;
   color: white;
   padding: 20px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
@@ -256,7 +256,7 @@ const handleLogout = () => {
 
 .sku-input:focus {
   outline: none;
-  border-color: #667eea;
+  border-color: #0F3F92;
 }
 
 .btn {
@@ -270,13 +270,13 @@ const handleLogout = () => {
 }
 
 .btn-primary {
-  background: #667eea;
+  background: #0F3F92;
   color: white;
 }
 
 .btn-primary:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 4px 12px rgba(15, 63, 146, 0.4);
 }
 
 .btn:disabled {
@@ -350,7 +350,7 @@ const handleLogout = () => {
 }
 
 .btn-save {
-  background: #667eea;
+  background: #0F3F92;
   color: white;
   padding: 12px 24px;
   border: none;
@@ -363,9 +363,9 @@ const handleLogout = () => {
 }
 
 .btn-save:hover:not(:disabled) {
-  background: #5568d3;
+  background: #0d3577;
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 4px 12px rgba(15, 63, 146, 0.4);
 }
 
 .btn-save:disabled {

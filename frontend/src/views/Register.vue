@@ -127,7 +127,7 @@ const handleRegister = async () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #667eea;
+  background: #0F3F92;
   padding: 20px;
 }
 
@@ -176,7 +176,7 @@ input {
 
 input:focus {
   outline: none;
-  border-color: #667eea;
+  border-color: #0F3F92;
 }
 
 .btn {
@@ -191,13 +191,13 @@ input:focus {
 }
 
 .btn-primary {
-  background: #667eea;
+  background: #0F3F92;
   color: white;
 }
 
 .btn-primary:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 5px 15px rgba(15, 63, 146, 0.4);
 }
 
 .btn:disabled {
@@ -222,7 +222,7 @@ input:focus {
 }
 
 .auth-link a {
-  color: #667eea;
+  color: #0F3F92;
   text-decoration: none;
   font-weight: 600;
 }

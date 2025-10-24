@@ -191,7 +191,7 @@ const handleImageError = (e) => {
 
 .product-sku {
   display: inline-block;
-  background: #667eea;
+  background: #0F3F92;
   color: white;
   padding: 4px 10px;
   border-radius: 4px;
@@ -223,7 +223,7 @@ const handleImageError = (e) => {
 .read-more-btn {
   background: none;
   border: none;
-  color: #667eea;
+  color: #0F3F92;
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
@@ -244,7 +244,7 @@ const handleImageError = (e) => {
   padding: 12px;
   background: #f8f9fa;
   border-radius: 6px;
-  border-left: 3px solid #667eea;
+  border-left: 3px solid #0F3F92;
 }
 
 .spec-item {
@@ -264,10 +264,6 @@ const handleImageError = (e) => {
   font-weight: 600;
 }
 
-.spec-item.dimensions .spec-value {
-  font-family: 'Courier New', monospace;
-  font-size: 12px;
-}
 
 .spec-item.price-change {
   border-top: 1px solid #e0e0e0;
@@ -276,14 +272,14 @@ const handleImageError = (e) => {
 }
 
 .spec-item.price-change .spec-value {
-  color: #667eea;
+  color: #0F3F92;
 }
 
 .btn-view-details {
   width: 100%;
   margin-top: 16px;
   padding: 12px;
-  background: #667eea;
+  background: #0F3F92;
   color: white;
   border: none;
   border-radius: 6px;
@@ -298,9 +294,9 @@ const handleImageError = (e) => {
 }
 
 .btn-view-details:hover {
-  background: #5568d3;
+  background: #0d3577;
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+  box-shadow: 0 4px 12px rgba(15, 63, 146, 0.3);
 }
 
 .btn-view-details svg {

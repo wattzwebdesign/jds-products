@@ -4,7 +4,8 @@
       <div class="header-content">
         <h1>JDS Product Search</h1>
         <div class="user-info">
-          <router-link to="/login" class="btn btn-login">Login</router-link>
+          <router-link v-if="!authStore.isAuthenticated" to="/login" class="btn btn-login">Login</router-link>
+          <router-link v-else to="/products" class="btn btn-login">Go to Products</router-link>
         </div>
       </div>
     </header>
@@ -177,10 +178,12 @@
 import { ref, computed, onMounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { productsAPI } from '../services/api';
+import { useAuthStore } from '../stores/auth';
 import ProductCard from '../components/ProductCard.vue';
 
 const router = useRouter();
 const route = useRoute();
+const authStore = useAuthStore();
 
 const searchQuery = ref('');
 const showFilters = ref(false);
@@ -400,7 +403,7 @@ onMounted(() => {
 }
 
 .header {
-  background: #667eea;
+  background: #0F3F92;
   color: white;
   padding: 20px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
@@ -500,7 +503,7 @@ onMounted(() => {
 
 .search-input:focus {
   outline: none;
-  border-color: #667eea;
+  border-color: #0F3F92;
 }
 
 .search-icon {
@@ -513,15 +516,15 @@ onMounted(() => {
 
 .btn-filter {
   background: white;
-  color: #667eea;
-  border: 1px solid #667eea;
+  color: #0F3F92;
+  border: 1px solid #0F3F92;
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
 .btn-filter:hover {
-  background: #667eea;
+  background: #0F3F92;
   color: white;
 }
 
@@ -565,13 +568,13 @@ onMounted(() => {
 }
 
 .color-search-input:hover {
-  border-color: #667eea;
+  border-color: #0F3F92;
 }
 
 .color-search-input:focus {
   outline: none;
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  border-color: #0F3F92;
+  box-shadow: 0 0 0 3px rgba(15, 63, 146, 0.1);
 }
 
 .clear-color-btn {
@@ -608,7 +611,7 @@ onMounted(() => {
   max-height: 300px;
   overflow-y: auto;
   background: white;
-  border: 2px solid #667eea;
+  border: 2px solid #0F3F92;
   border-radius: 6px;
   margin-top: 4px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
@@ -679,7 +682,7 @@ onMounted(() => {
   width: 48px;
   height: 48px;
   border: 4px solid #f3f3f3;
-  border-top: 4px solid #667eea;
+  border-top: 4px solid #0F3F92;
   border-radius: 50%;
   animation: spin 1s linear infinite;
   margin: 0 auto 16px;
@@ -768,24 +771,24 @@ onMounted(() => {
 }
 
 .items-per-page select:hover {
-  border-color: #667eea;
+  border-color: #0F3F92;
 }
 
 .items-per-page select:focus {
   outline: none;
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  border-color: #0F3F92;
+  box-shadow: 0 0 0 3px rgba(15, 63, 146, 0.1);
 }
 
 .btn-page {
   background: white;
-  color: #667eea;
-  border: 1px solid #667eea;
+  color: #0F3F92;
+  border: 1px solid #0F3F92;
   padding: 10px 20px;
 }
 
 .btn-page:hover:not(:disabled) {
-  background: #667eea;
+  background: #0F3F92;
   color: white;
 }
 
@@ -924,7 +927,7 @@ onMounted(() => {
 
 .detail-sku {
   display: inline-block;
-  background: #667eea;
+  background: #0F3F92;
   color: white;
   padding: 6px 14px;
   border-radius: 6px;

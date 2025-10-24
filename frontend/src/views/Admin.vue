@@ -314,7 +314,7 @@ onUnmounted(() => {
 }
 
 .header {
-  background: #667eea;
+  background: #0F3F92;
   color: white;
   padding: 20px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
@@ -348,9 +348,9 @@ onUnmounted(() => {
 }
 
 .sync-section {
-  background: #667eea;
+  background: #0F3F92;
   color: white;
-  border-left: 4px solid #5568d3;
+  border-left: 4px solid #0d3577;
 }
 
 .sync-section h2 {
@@ -483,7 +483,7 @@ onUnmounted(() => {
 
 .btn-sync {
   background: white;
-  color: #667eea;
+  color: #0F3F92;
   width: 100%;
   display: flex;
   align-items: center;
@@ -535,7 +535,7 @@ onUnmounted(() => {
 .stat-value {
   font-size: 28px;
   font-weight: 700;
-  color: #667eea;
+  color: #0F3F92;
   margin-bottom: 4px;
 }
 
@@ -557,13 +557,13 @@ onUnmounted(() => {
 }
 
 .upload-area:hover {
-  border-color: #667eea;
+  border-color: #0F3F92;
   background: #f8f9ff;
 }
 
 .upload-placeholder svg,
 .file-selected svg {
-  color: #667eea;
+  color: #0F3F92;
   margin-bottom: 16px;
 }
 
@@ -603,14 +603,14 @@ onUnmounted(() => {
 }
 
 .btn-primary {
-  background: #667eea;
+  background: #0F3F92;
   color: white;
   width: 100%;
 }
 
 .btn-primary:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 4px 12px rgba(15, 63, 146, 0.4);
 }
 
 .btn-secondary {
