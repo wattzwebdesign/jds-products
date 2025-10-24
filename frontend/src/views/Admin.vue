@@ -8,11 +8,59 @@
     </header>
 
     <main class="main-content">
+      <!-- Automatic Sync Section -->
+      <div class="import-section sync-section">
+        <h2>Automatic Product Sync</h2>
+        <p class="instructions">
+          Sync products directly from JDS master data.
+          Scheduled to run automatically every Sunday at midnight.
+        </p>
+
+        <div class="sync-info" v-if="syncStatus">
+          <div class="sync-status-item">
+            <span class="label">Last Sync:</span>
+            <span class="value">{{ syncStatus.lastSyncTimeFormatted || 'Never' }}</span>
+          </div>
+          <div class="sync-status-item" v-if="syncStatus.isRunning">
+            <span class="status-badge running">Sync in Progress...</span>
+          </div>
+          <div class="sync-status-item" v-else-if="syncStatus.lastResult">
+            <span class="status-badge" :class="syncStatus.lastResult.success ? 'success' : 'error'">
+              {{ syncStatus.lastResult.success ? 'Last sync successful' : 'Last sync failed' }}
+            </span>
+          </div>
+        </div>
+
+        <button
+          @click="handleSyncNow"
+          class="btn btn-sync"
+          :disabled="syncing || syncStatus?.isRunning"
+        >
+          <svg v-if="syncing || syncStatus?.isRunning" class="spinner-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <circle cx="12" cy="12" r="10" stroke-width="2"/>
+          </svg>
+          {{ syncing || syncStatus?.isRunning ? 'Syncing...' : 'Sync from JDS Now' }}
+        </button>
+
+        <div v-if="syncResult" class="result-message" :class="syncResult.success ? 'success' : 'error'">
+          <h3>{{ syncResult.success ? '✓ Sync Complete' : '✗ Sync Failed' }}</h3>
+          <p>{{ syncResult.message || syncResult.error }}</p>
+          <div v-if="syncResult.success" class="import-stats">
+            <span>Total: {{ syncResult.total }}</span>
+            <span>New: {{ syncResult.imported }}</span>
+            <span>Updated: {{ syncResult.updated }}</span>
+            <span v-if="syncResult.errors > 0">Errors: {{ syncResult.errors }}</span>
+            <span>Duration: {{ syncResult.duration }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Manual Excel Import Section -->
       <div class="import-section">
-        <h2>Import Products from Excel</h2>
+        <h2>Manual Import from Excel</h2>
         <p class="instructions">
           Upload an Excel file (.xlsx or .xls) with your JDS product catalog.
-          The system will import all products into the searchable database.
+          Use this for one-time imports or custom product data.
         </p>
 
         <div class="stats-grid" v-if="stats">
@@ -96,11 +144,46 @@ const importResult = ref(null);
 const errorMessage = ref('');
 const stats = ref(null);
 
+// Sync state
+const syncing = ref(false);
+const syncResult = ref(null);
+const syncStatus = ref(null);
+
 const loadStats = async () => {
   try {
     stats.value = await adminAPI.getImportStats();
   } catch (error) {
     console.error('Failed to load stats:', error);
+  }
+};
+
+const loadSyncStatus = async () => {
+  try {
+    syncStatus.value = await adminAPI.getSyncStatus();
+  } catch (error) {
+    console.error('Failed to load sync status:', error);
+  }
+};
+
+const handleSyncNow = async () => {
+  syncing.value = true;
+  syncResult.value = null;
+
+  try {
+    const result = await adminAPI.syncNow();
+    syncResult.value = result;
+
+    if (result.success) {
+      // Reload stats and sync status after successful sync
+      await Promise.all([loadStats(), loadSyncStatus()]);
+    }
+  } catch (error) {
+    syncResult.value = {
+      success: false,
+      error: error.response?.data?.message || error.response?.data?.error || 'Sync failed. Please try again.'
+    };
+  } finally {
+    syncing.value = false;
   }
 };
 
@@ -163,6 +246,7 @@ const handleImport = async () => {
 
 onMounted(() => {
   loadStats();
+  loadSyncStatus();
 });
 </script>
 
@@ -203,6 +287,96 @@ onMounted(() => {
   padding: 30px;
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin-bottom: 30px;
+}
+
+.sync-section {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.sync-section h2 {
+  color: white;
+}
+
+.sync-section .instructions {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.sync-info {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 20px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.sync-status-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.sync-status-item:last-child {
+  margin-bottom: 0;
+}
+
+.sync-status-item .label {
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.sync-status-item .value {
+  color: white;
+  font-size: 14px;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.status-badge.running {
+  background: #ffc107;
+  color: #000;
+}
+
+.status-badge.success {
+  background: #28a745;
+  color: white;
+}
+
+.status-badge.error {
+  background: #dc3545;
+  color: white;
+}
+
+.btn-sync {
+  background: white;
+  color: #667eea;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-weight: 700;
+}
+
+.btn-sync:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(255, 255, 255, 0.3);
+}
+
+.spinner-icon {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 
 .import-section h2 {

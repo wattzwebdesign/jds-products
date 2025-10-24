@@ -112,6 +112,16 @@ export const adminAPI = {
   getImportStats: async () => {
     const response = await apiClient.get('/admin/import-stats');
     return response.data;
+  },
+
+  syncNow: async () => {
+    const response = await apiClient.post('/admin/sync-now');
+    return response.data;
+  },
+
+  getSyncStatus: async () => {
+    const response = await apiClient.get('/admin/sync-status');
+    return response.data;
   }
 };
 
