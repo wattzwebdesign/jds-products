@@ -127,6 +127,11 @@ export const adminAPI = {
   getSyncStatus: async () => {
     const response = await apiClient.get('/admin/sync-status');
     return response.data;
+  },
+
+  addMissingProducts: async (skus) => {
+    const response = await apiClient.post('/admin/add-missing-products', { skus });
+    return response.data;
   }
 };
 

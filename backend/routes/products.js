@@ -204,11 +204,30 @@ router.post('/lookup', async (req, res) => {
     const foundSkus = products.map(p => p.sku);
     const notFoundSkus = skus.filter(sku => !foundSkus.includes(sku));
 
+    // Check which products exist in our database
+    const productsWithStatus = await Promise.all(
+      products.map(async (product) => {
+        const existsInDb = await prisma.product.findUnique({
+          where: { sku: product.sku },
+          select: { sku: true }
+        });
+
+        return {
+          ...product,
+          inDatabase: !!existsInDb
+        };
+      })
+    );
+
+    // Count missing products
+    const missingProducts = productsWithStatus.filter(p => !p.inDatabase);
+
     res.json({
       success: true,
-      products,
+      products: productsWithStatus,
       requestedCount: skus.length,
       foundCount: products.length,
+      missingCount: missingProducts.length,
       notFound: notFoundSkus.length > 0 ? notFoundSkus : undefined
     });
 

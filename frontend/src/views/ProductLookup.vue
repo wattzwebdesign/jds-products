@@ -42,15 +42,48 @@
       <div v-if="products.length > 0" class="results-section">
         <div class="results-header">
           <h2>Results</h2>
-          <span class="results-count">{{ products.length }} product{{ products.length !== 1 ? 's' : '' }} found</span>
+          <span class="results-count">{{ products.length}} product{{ products.length !== 1 ? 's' : '' }} found</span>
+        </div>
+
+        <!-- Save Missing Products Button -->
+        <div v-if="missingProducts.length > 0" class="save-section">
+          <div class="save-info">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <circle cx="12" cy="12" r="10" stroke-width="2"/>
+              <line x1="12" y1="8" x2="12" y2="12" stroke-width="2" stroke-linecap="round"/>
+              <line x1="12" y1="16" x2="12.01" y2="16" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+            <span>{{ missingProducts.length }} product{{ missingProducts.length !== 1 ? 's' : '' }} not in database</span>
+          </div>
+          <button
+            @click="handleSaveMissingProducts"
+            class="btn btn-save"
+            :disabled="saving"
+          >
+            {{ saving ? 'Saving...' : `Save ${missingProducts.length} Missing Product${missingProducts.length !== 1 ? 's' : ''}` }}
+          </button>
+        </div>
+
+        <!-- Success Message -->
+        <div v-if="saveResult" class="save-result" :class="saveResult.success ? 'success' : 'error'">
+          <strong>{{ saveResult.success ? '✓ Success' : '✗ Error' }}</strong>
+          <p>{{ saveResult.message }}</p>
         </div>
 
         <div class="products-grid">
-          <ProductCard
+          <div
             v-for="product in products"
             :key="product.sku"
-            :product="product"
-          />
+            class="product-wrapper"
+          >
+            <div v-if="!product.inDatabase" class="database-badge not-in-db">
+              Not in Database
+            </div>
+            <div v-else class="database-badge in-db">
+              In Database
+            </div>
+            <ProductCard :product="product" />
+          </div>
         </div>
       </div>
 
@@ -62,10 +95,10 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '../stores/auth';
-import { productsAPI } from '../services/api';
+import { productsAPI, adminAPI } from '../services/api';
 import ProductCard from '../components/ProductCard.vue';
 
 const router = useRouter();
@@ -77,9 +110,16 @@ const searchResult = ref(null);
 const errorMessage = ref('');
 const loading = ref(false);
 const hasSearched = ref(false);
+const saving = ref(false);
+const saveResult = ref(null);
+
+const missingProducts = computed(() => {
+  return products.value.filter(p => !p.inDatabase);
+});
 
 const handleSearch = async () => {
   errorMessage.value = '';
+  saveResult.value = null;
   loading.value = true;
   hasSearched.value = true;
 
@@ -92,6 +132,35 @@ const handleSearch = async () => {
     products.value = [];
   } finally {
     loading.value = false;
+  }
+};
+
+const handleSaveMissingProducts = async () => {
+  saving.value = true;
+  saveResult.value = null;
+
+  try {
+    const skusToSave = missingProducts.value.map(p => p.sku);
+    const result = await adminAPI.addMissingProducts(skusToSave);
+
+    saveResult.value = result;
+
+    // Mark saved products as now in database
+    if (result.success) {
+      products.value = products.value.map(p => {
+        if (skusToSave.includes(p.sku)) {
+          return { ...p, inDatabase: true };
+        }
+        return p;
+      });
+    }
+  } catch (error) {
+    saveResult.value = {
+      success: false,
+      message: error.response?.data?.error || 'Failed to save products. Please try again.'
+    };
+  } finally {
+    saving.value = false;
   }
 };
 
@@ -255,10 +324,114 @@ const handleLogout = () => {
   font-size: 14px;
 }
 
+.save-section {
+  background: #fff8e1;
+  border-left: 4px solid #ffc107;
+  padding: 20px;
+  border-radius: 8px;
+  margin-bottom: 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+}
+
+.save-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #856404;
+  font-weight: 600;
+}
+
+.save-info svg {
+  color: #ffc107;
+  flex-shrink: 0;
+}
+
+.btn-save {
+  background: #667eea;
+  color: white;
+  padding: 12px 24px;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+  white-space: nowrap;
+}
+
+.btn-save:hover:not(:disabled) {
+  background: #5568d3;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.btn-save:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.save-result {
+  padding: 16px;
+  border-radius: 8px;
+  margin-bottom: 24px;
+}
+
+.save-result.success {
+  background: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+}
+
+.save-result.error {
+  background: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+}
+
+.save-result strong {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 16px;
+}
+
+.save-result p {
+  margin: 0;
+  font-size: 14px;
+}
+
 .products-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
   gap: 24px;
+}
+
+.product-wrapper {
+  position: relative;
+}
+
+.database-badge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  z-index: 10;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.database-badge.in-db {
+  background: #28a745;
+  color: white;
+}
+
+.database-badge.not-in-db {
+  background: #ffc107;
+  color: #856404;
 }
 
 .no-results {

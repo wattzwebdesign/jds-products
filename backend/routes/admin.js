@@ -6,6 +6,10 @@ import { importProductsFromExcel, getImportStats } from '../services/excelImport
 import { manualImport, getImportStatus } from '../services/scheduler.js';
 import { getLastSyncInfo } from '../services/autoImport.js';
 import { authenticateToken } from '../middleware/auth.js';
+import jdsApiClient from '../services/jdsApiClient.js';
+import { PrismaClient } from '@prisma/client';
+
+const prisma = new PrismaClient();
 
 const router = express.Router();
 
@@ -131,6 +135,121 @@ router.get('/sync-status', authenticateToken, async (req, res) => {
     console.error('[Admin] Error getting sync status:', error);
     res.status(500).json({
       error: 'Failed to get sync status',
+      message: error.message
+    });
+  }
+});
+
+/**
+ * POST /api/admin/add-missing-products
+ * Body: { skus: string[] }
+ * Fetch products from JDS API and add them to database if missing
+ */
+router.post('/add-missing-products', authenticateToken, async (req, res) => {
+  try {
+    const { skus } = req.body;
+
+    if (!skus || !Array.isArray(skus) || skus.length === 0) {
+      return res.status(400).json({
+        error: 'Please provide an array of SKUs'
+      });
+    }
+
+    // Get user's JDS API token
+    const user = await prisma.user.findUnique({
+      where: { id: req.user.userId },
+      select: { jdsApiToken: true }
+    });
+
+    if (!user || !user.jdsApiToken) {
+      return res.status(400).json({
+        error: 'JDS API token not configured'
+      });
+    }
+
+    // Fetch products from JDS API
+    const jdsProducts = await jdsApiClient.getProductDetailsBySkus(skus, user.jdsApiToken);
+
+    if (jdsProducts.length === 0) {
+      return res.status(404).json({
+        error: 'No products found in JDS API'
+      });
+    }
+
+    const results = [];
+    let added = 0;
+    let updated = 0;
+    let skipped = 0;
+
+    for (const jdsProduct of jdsProducts) {
+      try {
+        // Check if product exists
+        const existing = await prisma.product.findUnique({
+          where: { sku: jdsProduct.sku }
+        });
+
+        // Create product object from JDS API data
+        const productData = {
+          sku: jdsProduct.sku,
+          name: jdsProduct.name || 'Unknown Product',
+          description: jdsProduct.description || null,
+          basePrice: jdsProduct.pricing?.price || null,
+          availableQty: jdsProduct.availability?.available || 0,
+          localQty: jdsProduct.availability?.local || 0,
+          imageUrl: jdsProduct.imageUrl || null,
+          category: jdsProduct.category || null,
+          lastSynced: new Date()
+        };
+
+        if (existing) {
+          // Update existing product
+          await prisma.product.update({
+            where: { sku: jdsProduct.sku },
+            data: productData
+          });
+          updated++;
+          results.push({
+            sku: jdsProduct.sku,
+            status: 'updated',
+            name: jdsProduct.name
+          });
+        } else {
+          // Create new product
+          await prisma.product.create({
+            data: productData
+          });
+          added++;
+          results.push({
+            sku: jdsProduct.sku,
+            status: 'added',
+            name: jdsProduct.name
+          });
+        }
+      } catch (error) {
+        console.error(`Error adding product ${jdsProduct.sku}:`, error);
+        skipped++;
+        results.push({
+          sku: jdsProduct.sku,
+          status: 'error',
+          error: error.message
+        });
+      }
+    }
+
+    res.json({
+      success: true,
+      total: jdsProducts.length,
+      added,
+      updated,
+      skipped,
+      results,
+      message: `Successfully processed ${jdsProducts.length} products (${added} added, ${updated} updated, ${skipped} errors)`
+    });
+
+  } catch (error) {
+    console.error('Add missing products error:', error);
+    res.status(500).json({
+      error: 'Failed to add products',
       message: error.message
     });
   }
