@@ -36,41 +36,6 @@
         </button>
       </div>
 
-      <div class="product-pricing" v-if="product.basePrice">
-        <h4>Pricing</h4>
-        <div class="pricing-grid">
-          <div class="price-item">
-            <span class="price-label">Less than case:</span>
-            <span class="price-value">${{ formatPrice(product.basePrice) }}</span>
-          </div>
-          <div class="price-item">
-            <span class="price-label">1 case ({{ product.caseQuantity || '-' }} units):</span>
-            <span class="price-value">${{ product.oneCase ? formatPrice(product.oneCase) : '-' }}</span>
-          </div>
-          <div class="price-item">
-            <span class="price-label">5+ cases:</span>
-            <span class="price-value">${{ product.fiveCases ? formatPrice(product.fiveCases) : '-' }}</span>
-          </div>
-          <div class="price-item">
-            <span class="price-label">10+ cases:</span>
-            <span class="price-value">${{ product.tenCases ? formatPrice(product.tenCases) : '-' }}</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="product-availability">
-        <div class="availability-item">
-          <span class="availability-label">Available:</span>
-          <span class="availability-value" :class="availableQty > 0 ? 'in-stock' : 'out-of-stock'">
-            {{ availableQty }} units
-          </span>
-        </div>
-        <div class="availability-item">
-          <span class="availability-label">Local:</span>
-          <span class="availability-value">{{ localQty }} units</span>
-        </div>
-      </div>
-
       <button @click.stop="$emit('view-details', product)" class="btn-view-details">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
           <path d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" stroke-width="2"/>
@@ -230,69 +195,6 @@ const handleImageError = (e) => {
 .read-more-btn:hover {
   color: #5568d3;
   text-decoration: underline;
-}
-
-.product-pricing {
-  margin: 20px 0;
-  padding: 16px;
-  background: #f9f9f9;
-  border-radius: 8px;
-}
-
-.product-pricing h4 {
-  margin: 0 0 12px 0;
-  color: #333;
-  font-size: 16px;
-  font-weight: 600;
-}
-
-.pricing-grid {
-  display: grid;
-  gap: 8px;
-}
-
-.price-item {
-  display: flex;
-  justify-content: space-between;
-  font-size: 14px;
-}
-
-.price-label {
-  color: #666;
-}
-
-.price-value {
-  color: #333;
-  font-weight: 600;
-}
-
-.product-availability {
-  display: flex;
-  gap: 20px;
-  padding-top: 16px;
-  border-top: 1px solid #eee;
-}
-
-.availability-item {
-  display: flex;
-  gap: 8px;
-  font-size: 14px;
-}
-
-.availability-label {
-  color: #666;
-}
-
-.availability-value {
-  font-weight: 600;
-}
-
-.in-stock {
-  color: #22c55e;
-}
-
-.out-of-stock {
-  color: #ef4444;
 }
 
 .btn-view-details {

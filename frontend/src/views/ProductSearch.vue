@@ -136,14 +136,20 @@
         <div v-else-if="liveProduct" class="live-product-details">
           <div class="detail-header">
             <div class="detail-image">
-              <img v-if="liveProduct.imageUrl" :src="liveProduct.imageUrl" :alt="liveProduct.name" />
+              <img
+                v-if="liveProduct.imageUrl && !imageLoadError"
+                :src="liveProduct.imageUrl"
+                :alt="liveProduct.name"
+                @error="handleImageLoadError"
+                @load="handleImageLoadSuccess"
+              />
               <div v-else class="no-image">
                 <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                   <rect x="3" y="3" width="18" height="18" rx="2" ry="2" stroke-width="2"/>
                   <circle cx="8.5" cy="8.5" r="1.5" stroke-width="2"/>
                   <polyline points="21 15 16 10 5 21" stroke-width="2"/>
                 </svg>
-                <span>No Image</span>
+                <span>{{ imageLoadError ? 'Image Failed to Load' : 'No Image' }}</span>
               </div>
             </div>
             <div class="detail-info">
@@ -223,6 +229,7 @@ const errorMessage = ref('');
 const selectedProduct = ref(null);
 const liveProduct = ref(null);
 const loadingLive = ref(false);
+const imageLoadError = ref(false);
 
 let searchTimeout = null;
 
@@ -280,13 +287,20 @@ const handleProductClick = async (product) => {
   selectedProduct.value = product;
   loadingLive.value = true;
   liveProduct.value = null;
+  imageLoadError.value = false;
 
   try {
     const result = await productsAPI.getLiveProduct(product.sku);
     liveProduct.value = result.product;
+
+    // Debug logging
+    console.log('Live product data:', result.product);
+    console.log('Image URL:', result.product.imageUrl);
   } catch (error) {
     console.error('Failed to fetch live product:', error);
     liveProduct.value = product; // Fallback to cached data
+    console.log('Fallback product data:', product);
+    console.log('Fallback image URL:', product.imageUrl);
   } finally {
     loadingLive.value = false;
   }
@@ -295,6 +309,18 @@ const handleProductClick = async (product) => {
 const closeModal = () => {
   selectedProduct.value = null;
   liveProduct.value = null;
+  imageLoadError.value = false;
+};
+
+const handleImageLoadError = (e) => {
+  console.error('Image failed to load:', liveProduct.value?.imageUrl);
+  console.error('Error event:', e);
+  imageLoadError.value = true;
+};
+
+const handleImageLoadSuccess = () => {
+  console.log('Image loaded successfully:', liveProduct.value?.imageUrl);
+  imageLoadError.value = false;
 };
 
 const handleLogout = () => {
