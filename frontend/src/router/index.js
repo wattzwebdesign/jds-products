@@ -74,16 +74,25 @@ router.beforeEach((to, from, next) => {
 
 // Track page views with Fathom Analytics after each route change
 router.afterEach(() => {
-  // Check if Fathom is loaded
-  if (window.fathom) {
-    // For SPAs with hash routing, pass the full URL including hash fragment
-    // See: https://usefathom.com/docs/script/script-advanced#single-page-applications
-    const fullUrl = window.location.href;
-    console.log('Router tracking pageview (SPA hash):', fullUrl);
-    window.fathom.trackPageview({
-      url: fullUrl
-    });
-  }
+  // Wait for Fathom to load (it has defer attribute)
+  const trackPageview = () => {
+    if (window.fathom) {
+      // For SPAs with hash routing, pass the full URL including hash fragment
+      // See: https://usefathom.com/docs/script/script-advanced#single-page-applications
+      const fullUrl = window.location.href;
+      console.log('✅ Router tracking pageview (SPA hash):', fullUrl);
+      console.log('window.fathom exists:', !!window.fathom);
+      window.fathom.trackPageview({
+        url: fullUrl
+      });
+    } else {
+      console.warn('⚠️ Fathom not loaded yet, waiting...');
+      setTimeout(trackPageview, 100);
+    }
+  };
+
+  // Give Fathom time to load on first navigation
+  setTimeout(trackPageview, 200);
 });
 
 export default router;

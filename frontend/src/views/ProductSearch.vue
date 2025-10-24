@@ -518,11 +518,17 @@ const handleProductClick = async (product) => {
   await router.push({ query: currentQuery });
 
   // Track modal view as pageview in Fathom (SPA hash routing requires full URL)
-  if (window.fathom) {
-    setTimeout(() => {
+  setTimeout(() => {
+    if (window.fathom) {
       // For hash routing, pass the full href including the hash fragment
       const fullUrl = window.location.href;
-      console.log('Tracking modal pageview (SPA hash):', fullUrl);
+      console.log('✅ Tracking modal pageview (SPA hash):', fullUrl);
+      console.log('URL breakdown:', {
+        href: window.location.href,
+        hash: window.location.hash,
+        pathname: window.location.pathname
+      });
+
       window.fathom.trackPageview({
         url: fullUrl
       });
@@ -533,8 +539,10 @@ const handleProductClick = async (product) => {
         _site_id: 'UMVXBRTN',
         _value: 1
       });
-    }, 100);
-  }
+    } else {
+      console.error('❌ window.fathom not available for modal tracking');
+    }
+  }, 200);
 
   try {
     const result = await productsAPI.getLiveProduct(product.sku);
