@@ -233,17 +233,40 @@ router.post('/lookup', authenticateToken, async (req, res) => {
     const foundSkus = products.map(p => p.sku);
     const notFoundSkus = skus.filter(sku => !foundSkus.includes(sku));
 
-    // Check which products exist in our database
+    // Check which products exist in our database and merge with DB data
     const productsWithStatus = await Promise.all(
       products.map(async (product) => {
-        const existsInDb = await prisma.product.findUnique({
+        const dbProduct = await prisma.product.findUnique({
           where: { sku: product.sku },
-          select: { sku: true }
+          select: {
+            sku: true,
+            imageUrl: true,
+            basePrice: true,
+            category: true,
+            caseQty: true,
+            color: true,
+            length: true,
+            width: true,
+            height: true,
+            lastPriceChange: true
+          }
         });
 
+        // Merge JDS API data with database data (prefer API for live data, DB for static data)
         return {
           ...product,
-          inDatabase: !!existsInDb
+          // Use DB image if available, fallback to API image
+          imageUrl: dbProduct?.imageUrl || product.imageUrl || product.image_url || product.Image || null,
+          // Merge other DB fields
+          basePrice: dbProduct?.basePrice || product.basePrice,
+          category: dbProduct?.category || product.category,
+          caseQty: dbProduct?.caseQty,
+          color: dbProduct?.color,
+          length: dbProduct?.length,
+          width: dbProduct?.width,
+          height: dbProduct?.height,
+          lastPriceChange: dbProduct?.lastPriceChange,
+          inDatabase: !!dbProduct
         };
       })
     );

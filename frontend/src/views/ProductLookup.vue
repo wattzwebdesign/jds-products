@@ -102,6 +102,47 @@
         <p>No products found. Please check your SKU codes and try again.</p>
       </div>
     </main>
+
+    <!-- Product Detail Modal -->
+    <div v-if="selectedProduct" class="modal-overlay" @click="closeModal">
+      <div class="modal-content" @click.stop>
+        <button @click="closeModal" class="modal-close">×</button>
+
+        <div v-if="loadingLive" class="loading-live">
+          <div class="spinner"></div>
+          <p>Fetching live inventory & pricing...</p>
+        </div>
+
+        <div v-else-if="liveProduct" class="live-product-details">
+          <h2>{{ liveProduct.name }}</h2>
+          <p class="sku">SKU: {{ liveProduct.sku }}</p>
+
+          <div class="inventory-section">
+            <h3>Inventory</h3>
+            <div class="inventory-grid">
+              <div class="inventory-item">
+                <span class="label">Available:</span>
+                <span class="value">{{ liveProduct.availability?.available || 0 }}</span>
+              </div>
+              <div class="inventory-item">
+                <span class="label">Local:</span>
+                <span class="value">{{ liveProduct.availability?.local || 0 }}</span>
+              </div>
+            </div>
+          </div>
+
+          <div v-if="liveProduct.pricing" class="pricing-section">
+            <h3>Pricing</h3>
+            <div class="pricing-grid">
+              <div class="price-item">
+                <span class="label">Price:</span>
+                <span class="value">${{ liveProduct.pricing?.price?.toFixed(2) || '0.00' }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -175,12 +216,29 @@ const handleSaveMissingProducts = async () => {
   }
 };
 
-const handleViewProduct = (product) => {
-  // Navigate to products page with the SKU in the search
-  router.push({
-    path: '/products',
-    query: { q: product.sku }
-  });
+const selectedProduct = ref(null);
+const liveProduct = ref(null);
+const loadingLive = ref(false);
+
+const handleViewProduct = async (product) => {
+  selectedProduct.value = product;
+  loadingLive.value = true;
+  liveProduct.value = null;
+
+  try {
+    const result = await productsAPI.getLiveProduct(product.sku);
+    liveProduct.value = result.product;
+  } catch (error) {
+    console.error('Failed to fetch live product:', error);
+    liveProduct.value = product; // Fallback to cached data
+  } finally {
+    loadingLive.value = false;
+  }
+};
+
+const closeModal = () => {
+  selectedProduct.value = null;
+  liveProduct.value = null;
 };
 
 const handleLogout = () => {
@@ -203,7 +261,7 @@ const handleLogout = () => {
 }
 
 .header-content {
-  max-width: 1200px;
+  max-width: 1400px;
   margin: 0 auto;
   display: flex;
   justify-content: space-between;
@@ -276,7 +334,7 @@ const handleLogout = () => {
 }
 
 .main-content {
-  max-width: 1200px;
+  max-width: 1400px;
   margin: 0 auto;
   padding: 40px 20px;
 }
@@ -499,6 +557,150 @@ const handleLogout = () => {
   color: #666;
 }
 
+/* Modal Styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 12px;
+  max-width: 900px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  position: relative;
+  padding: 32px;
+}
+
+.modal-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: #f0f0f0;
+  border: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+  color: #666;
+  transition: all 0.3s;
+}
+
+.modal-close:hover {
+  background: #e0e0e0;
+  color: #333;
+}
+
+.loading-live {
+  text-align: center;
+  padding: 60px 20px;
+}
+
+.loading-live p {
+  color: #666;
+  margin-top: 20px;
+  font-size: 16px;
+}
+
+.spinner {
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #0F3F92;
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  animation: spin 1s linear infinite;
+  margin: 0 auto;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.live-product-details {
+  padding: 20px 0;
+}
+
+.live-product-details h2 {
+  margin: 0 0 12px 0;
+  color: #333;
+  font-size: 24px;
+  line-height: 1.3;
+}
+
+.live-product-details .sku {
+  display: inline-block;
+  background: #0F3F92;
+  color: white;
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 24px;
+}
+
+.inventory-section,
+.pricing-section {
+  margin-bottom: 30px;
+}
+
+.inventory-section h3,
+.pricing-section h3 {
+  margin: 0 0 16px 0;
+  color: #333;
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.inventory-grid,
+.pricing-grid {
+  background: #f9f9f9;
+  padding: 20px;
+  border-radius: 12px;
+  display: grid;
+  gap: 16px;
+}
+
+.inventory-item,
+.price-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 12px 0;
+  border-bottom: 1px solid #eee;
+  font-size: 15px;
+}
+
+.inventory-item:last-child,
+.price-item:last-child {
+  border-bottom: none;
+}
+
+.inventory-item .label,
+.price-item .label {
+  color: #666;
+  font-weight: 500;
+}
+
+.inventory-item .value,
+.price-item .value {
+  color: #333;
+  font-weight: 700;
+  font-size: 16px;
+}
+
 @media (max-width: 768px) {
   .header-content {
     flex-direction: column;
@@ -508,6 +710,10 @@ const handleLogout = () => {
 
   .products-grid {
     grid-template-columns: 1fr;
+  }
+
+  .modal-content {
+    padding: 24px;
   }
 }
 </style>
