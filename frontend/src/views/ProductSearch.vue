@@ -413,18 +413,11 @@ const clearAllSearch = () => {
   colorSearchQuery.value = '';
   showColorDropdown.value = false;
   showFilters.value = false;
-  hasSearched.value = false;
-  products.value = [];
-  pagination.value = {
-    page: 1,
-    limit: 20,
-    total: 0,
-    totalPages: 0
-  };
   errorMessage.value = '';
 
-  // Clear URL parameters
+  // Clear URL parameters and perform search to show all products
   router.replace({ query: {} });
+  performSearch(1);
   window.scrollTo({ top: 0, behavior: 'smooth' });
 };
 
