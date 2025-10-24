@@ -57,7 +57,7 @@ class JDSApiClient {
   /**
    * Parse SKU string input (handles comma-separated, space-separated, or newline-separated SKUs)
    * @param {string} input - SKU input string
-   * @returns {string[]} Array of cleaned SKU codes
+   * @returns {string[]} Array of cleaned SKU codes (converted to uppercase)
    */
   parseSkuInput(input) {
     if (!input || typeof input !== 'string') {
@@ -65,9 +65,10 @@ class JDSApiClient {
     }
 
     // Split by comma, newline, or whitespace and filter out empty strings
+    // Convert to uppercase for case-insensitive matching
     const skus = input
       .split(/[,\n\s]+/)
-      .map(sku => sku.trim())
+      .map(sku => sku.trim().toUpperCase())
       .filter(sku => sku.length > 0);
 
     return skus;

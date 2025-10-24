@@ -210,11 +210,10 @@ router.post('/add-missing-products', authenticateToken, async (req, res) => {
         };
 
         // Log the JDS product data to help debug
-        console.log(`Processing ${jdsProduct.sku}:`, {
-          hasImageUrl: !!imageUrl,
-          imageUrlValue: imageUrl,
-          jdsProductKeys: Object.keys(jdsProduct)
-        });
+        console.log(`\n===== Processing Product: ${jdsProduct.sku} =====`);
+        console.log('Image URL found:', imageUrl);
+        console.log('All JDS API fields:', JSON.stringify(jdsProduct, null, 2));
+        console.log('==========================================\n');
 
         if (existing) {
           // Update existing product

@@ -210,9 +210,18 @@ const filteredColors = computed(() => {
   }
 
   const query = colorSearchQuery.value.toLowerCase();
-  return availableColors.value.filter(c =>
+  const filtered = availableColors.value.filter(c =>
     c.color.toLowerCase().includes(query)
   ).slice(0, 20); // Limit to 20 results
+
+  console.log('Color search:', {
+    query: colorSearchQuery.value,
+    availableColorsCount: availableColors.value.length,
+    filteredCount: filtered.length,
+    showDropdown: showColorDropdown.value
+  });
+
+  return filtered;
 });
 
 const performSearch = async (page = 1, updateUrl = true) => {
