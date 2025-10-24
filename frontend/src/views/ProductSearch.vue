@@ -517,22 +517,14 @@ const handleProductClick = async (product) => {
   const currentQuery = { ...route.query, sku: product.sku };
   await router.push({ query: currentQuery });
 
-  // Track modal view as pageview in Fathom
+  // Track product view as custom event (Fathom strips query params from pageviews)
   setTimeout(() => {
     if (window.fathom) {
-      // Extract hash path and send as clean URL without # symbol
-      const hashPath = window.location.hash.substring(1) || '/';
-      const cleanUrl = window.location.origin + hashPath;
+      // Track as custom event with full product details
+      const eventName = `Product View: ${product.sku}`;
+      console.log('✅ Tracking product view event:', eventName);
+      console.log('Product:', product.name?.substring(0, 50));
 
-      console.log('✅ Tracking modal pageview:', cleanUrl);
-      console.log('Hash was:', window.location.hash);
-
-      window.fathom.trackPageview({
-        url: cleanUrl
-      });
-
-      // Also track as custom event for product analytics
-      const eventName = `Product View: ${product.sku} - ${product.name?.substring(0, 50) || 'Unknown'}`;
       window.fathom.trackEvent(eventName, {
         _site_id: 'UMVXBRTN',
         _value: 1
@@ -613,22 +605,13 @@ const openModalFromUrl = async (sku) => {
       liveProduct.value = null;
       imageLoadError.value = false;
 
-      // Track modal view as pageview in Fathom
+      // Track product view as custom event (Fathom strips query params from pageviews)
       if (window.fathom) {
         setTimeout(() => {
-          // Extract hash path and send as clean URL without # symbol
-          const hashPath = window.location.hash.substring(1) || '/';
-          const cleanUrl = window.location.origin + hashPath;
+          const eventName = `Product View: ${sku}`;
+          console.log('✅ Tracking product view event from URL:', eventName);
+          console.log('Product:', product.name?.substring(0, 50));
 
-          console.log('Tracking modal pageview from URL:', cleanUrl);
-          console.log('Hash was:', window.location.hash);
-
-          window.fathom.trackPageview({
-            url: cleanUrl
-          });
-
-          // Also track as custom event for product analytics
-          const eventName = `Product View: ${sku} - ${product.name?.substring(0, 50) || 'Unknown'}`;
           window.fathom.trackEvent(eventName, {
             _site_id: 'UMVXBRTN',
             _value: 1
