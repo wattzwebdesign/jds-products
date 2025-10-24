@@ -14,8 +14,12 @@ if ($debugMode) {
         'REQUEST_URI' => $_SERVER['REQUEST_URI'],
         'SCRIPT_NAME' => $_SERVER['SCRIPT_NAME'],
         'PATH_INFO' => $_SERVER['PATH_INFO'] ?? 'NOT SET',
+        'REDIRECT_API_PATH' => $_SERVER['REDIRECT_API_PATH'] ?? 'NOT SET',
         'QUERY_STRING' => $_SERVER['QUERY_STRING'] ?? '',
-        'REQUEST_METHOD' => $_SERVER['REQUEST_METHOD']
+        'REQUEST_METHOD' => $_SERVER['REQUEST_METHOD'],
+        'all_env_vars' => array_filter($_SERVER, function($key) {
+            return strpos($key, 'REDIRECT') === 0 || strpos($key, 'PATH') !== false;
+        }, ARRAY_FILTER_USE_KEY)
     ], JSON_PRETTY_PRINT);
     exit();
 }
@@ -38,8 +42,11 @@ $requestUri = $_SERVER['REQUEST_URI'];
 if (isset($_SERVER['PATH_INFO'])) {
     // Method 1: PATH_INFO is set
     $apiPath = $_SERVER['PATH_INFO'];
+} elseif (isset($_SERVER['REDIRECT_API_PATH'])) {
+    // Method 2: Environment variable from .htaccess rewrite
+    $apiPath = $_SERVER['REDIRECT_API_PATH'];
 } else {
-    // Method 2: Extract from REQUEST_URI
+    // Method 3: Extract from REQUEST_URI
     // Remove query string
     $path = parse_url($requestUri, PHP_URL_PATH);
 

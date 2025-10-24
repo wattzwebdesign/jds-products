@@ -1,9 +1,12 @@
 # Enable Rewrite Engine
 RewriteEngine On
 
+# Enable PATH_INFO for api.php
+AcceptPathInfo On
+
 # Proxy API requests through PHP proxy to Node.js backend
 RewriteCond %{REQUEST_URI} ^/api/
-RewriteRule ^api/(.*)$ /api.php/$1 [L,QSA]
+RewriteRule ^api/(.*)$ /api.php/$1 [L,QSA,E=API_PATH:/$1]
 
 # Handle Vue.js routing - redirect all requests to index.html
 RewriteCond %{REQUEST_FILENAME} !-f
