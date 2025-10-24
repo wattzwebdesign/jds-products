@@ -3,6 +3,8 @@ import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 import { importProductsFromExcel, getImportStats } from '../services/excelImport.js';
+import { manualImport, getImportStatus } from '../services/scheduler.js';
+import { getLastSyncInfo } from '../services/autoImport.js';
 import { authenticateToken } from '../middleware/auth.js';
 
 const router = express.Router();
@@ -82,6 +84,52 @@ router.get('/import-stats', authenticateToken, async (req, res) => {
     console.error('Error getting import stats:', error);
     res.status(500).json({
       error: 'Failed to get import statistics',
+      message: error.message
+    });
+  }
+});
+
+/**
+ * POST /api/admin/sync-now
+ * Manually trigger product sync from JDS master data
+ */
+router.post('/sync-now', authenticateToken, async (req, res) => {
+  try {
+    console.log('[Admin] Manual sync triggered by user');
+    const result = await manualImport();
+
+    if (result.success) {
+      res.json(result);
+    } else {
+      res.status(result.isRunning ? 409 : 500).json(result);
+    }
+  } catch (error) {
+    console.error('[Admin] Sync error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Sync failed',
+      message: error.message
+    });
+  }
+});
+
+/**
+ * GET /api/admin/sync-status
+ * Get current sync status and last sync info
+ */
+router.get('/sync-status', authenticateToken, async (req, res) => {
+  try {
+    const status = getImportStatus();
+    const lastSync = await getLastSyncInfo();
+
+    res.json({
+      ...status,
+      ...lastSync
+    });
+  } catch (error) {
+    console.error('[Admin] Error getting sync status:', error);
+    res.status(500).json({
+      error: 'Failed to get sync status',
       message: error.message
     });
   }

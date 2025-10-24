@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import authRoutes from './routes/auth.js';
 import productsRoutes from './routes/products.js';
 import adminRoutes from './routes/admin.js';
+import { initializeScheduler } from './services/scheduler.js';
 
 // Load environment variables
 dotenv.config();
@@ -58,6 +59,9 @@ app.listen(PORT, () => {
   console.log(`\n🚀 Server running on http://localhost:${PORT}`);
   console.log(`📝 Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log(`🔍 Health check: http://localhost:${PORT}/health\n`);
+
+  // Initialize scheduled tasks
+  initializeScheduler();
 });
 
 // Graceful shutdown
