@@ -16,6 +16,7 @@ model User {
   username    String   @unique
   password    String
   jdsApiToken String?
+  isAdmin     Boolean  @default(false)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }

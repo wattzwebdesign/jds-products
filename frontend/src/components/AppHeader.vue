@@ -15,7 +15,7 @@
 
         <!-- Show when authenticated -->
         <template v-else>
-          <router-link to="/admin" class="btn btn-admin">⚙ Admin</router-link>
+          <router-link v-if="authStore.isAdmin" to="/admin" class="btn btn-admin">⚙ Admin</router-link>
           <span>{{ authStore.user?.username }}</span>
           <button @click="handleLogout" class="btn btn-logout">Logout</button>
         </template>

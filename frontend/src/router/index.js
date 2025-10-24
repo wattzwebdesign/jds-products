@@ -33,7 +33,7 @@ const routes = [
     path: '/admin',
     name: 'Admin',
     component: () => import('../views/Admin.vue'),
-    meta: { requiresAuth: true }
+    meta: { requiresAuth: true, requiresAdmin: true }
   },
   {
     path: '/sku-lookup',
@@ -52,6 +52,7 @@ const router = createRouter({
 router.beforeEach((to, from, next) => {
   const authStore = useAuthStore();
   const isAuthenticated = authStore.isAuthenticated;
+  const isAdmin = authStore.isAdmin;
 
   // Redirect to products if trying to access login/register while authenticated
   if (to.meta.requiresGuest && isAuthenticated) {
@@ -60,6 +61,10 @@ router.beforeEach((to, from, next) => {
   // Redirect to login if trying to access protected route while not authenticated
   else if (to.meta.requiresAuth && !isAuthenticated) {
     next('/login');
+  }
+  // Redirect to products if trying to access admin route without admin privileges
+  else if (to.meta.requiresAdmin && !isAdmin) {
+    next('/products');
   }
   // Allow navigation
   else {

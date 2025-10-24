@@ -58,7 +58,8 @@ router.post('/register', async (req, res) => {
       user: {
         id: user.id,
         username: user.username,
-        hasJdsToken: !!user.jdsApiToken
+        hasJdsToken: !!user.jdsApiToken,
+        isAdmin: user.isAdmin || false
       }
     });
   } catch (error) {
@@ -106,7 +107,8 @@ router.post('/login', async (req, res) => {
       user: {
         id: user.id,
         username: user.username,
-        hasJdsToken: !!user.jdsApiToken
+        hasJdsToken: !!user.jdsApiToken,
+        isAdmin: user.isAdmin || false
       }
     });
   } catch (error) {

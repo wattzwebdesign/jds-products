@@ -6,12 +6,17 @@ import { importProductsFromExcel, getImportStats } from '../services/excelImport
 import { manualImport, getImportStatus } from '../services/scheduler.js';
 import { getLastSyncInfo } from '../services/autoImport.js';
 import { authenticateToken } from '../middleware/auth.js';
+import { requireAdmin } from '../middleware/adminAuth.js';
 import jdsApiClient from '../services/jdsApiClient.js';
 import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
 const router = express.Router();
+
+// Apply admin check to ALL routes in this router
+router.use(authenticateToken);
+router.use(requireAdmin);
 
 // Configure multer for file upload
 const upload = multer({
@@ -37,7 +42,7 @@ if (!fs.existsSync('uploads')) {
  * POST /api/admin/import-products
  * Upload and import products from Excel file
  */
-router.post('/import-products', authenticateToken, upload.single('file'), async (req, res) => {
+router.post('/import-products', upload.single('file'), async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ error: 'No file uploaded' });
@@ -75,7 +80,7 @@ router.post('/import-products', authenticateToken, upload.single('file'), async 
  * GET /api/admin/import-stats
  * Get statistics about imported products
  */
-router.get('/import-stats', authenticateToken, async (req, res) => {
+router.get('/import-stats', async (req, res) => {
   try {
     const stats = await getImportStats();
 
@@ -98,7 +103,7 @@ router.get('/import-stats', authenticateToken, async (req, res) => {
  * Manually trigger product sync from JDS master data
  * Returns immediately, sync runs in background
  */
-router.post('/sync-now', authenticateToken, (req, res) => {
+router.post('/sync-now', (req, res) => {
   try {
     console.log('[Admin] Manual sync triggered by user');
     const result = manualImport(); // No await - returns immediately
@@ -122,7 +127,7 @@ router.post('/sync-now', authenticateToken, (req, res) => {
  * GET /api/admin/sync-status
  * Get current sync status and last sync info
  */
-router.get('/sync-status', authenticateToken, async (req, res) => {
+router.get('/sync-status', async (req, res) => {
   try {
     const status = getImportStatus();
     const lastSync = await getLastSyncInfo();
@@ -145,7 +150,7 @@ router.get('/sync-status', authenticateToken, async (req, res) => {
  * Body: { skus: string[] }
  * Fetch products from JDS API and add them to database if missing
  */
-router.post('/add-missing-products', authenticateToken, async (req, res) => {
+router.post('/add-missing-products', async (req, res) => {
   try {
     const { skus } = req.body;
 

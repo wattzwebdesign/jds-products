@@ -9,6 +9,7 @@ export const useAuthStore = defineStore('auth', () => {
 
   // Getters
   const isAuthenticated = computed(() => !!token.value);
+  const isAdmin = computed(() => !!user.value?.isAdmin);
 
   // Actions
   const setAuth = (authData) => {
@@ -68,6 +69,7 @@ export const useAuthStore = defineStore('auth', () => {
     token,
     user,
     isAuthenticated,
+    isAdmin,
     register,
     login,
     updateJdsToken,
