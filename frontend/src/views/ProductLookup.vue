@@ -131,14 +131,15 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
-import { useRouter } from 'vue-router';
+import { ref, computed, onMounted, watch } from 'vue';
+import { useRouter, useRoute } from 'vue-router';
 import { useAuthStore } from '../stores/auth';
 import { productsAPI, adminAPI } from '../services/api';
 import ProductCard from '../components/ProductCard.vue';
 import AppHeader from '../components/AppHeader.vue';
 
 const router = useRouter();
+const route = useRoute();
 const authStore = useAuthStore();
 
 const skuInput = ref('');
@@ -214,6 +215,10 @@ const liveProduct = ref(null);
 const loadingLive = ref(false);
 
 const handleViewProduct = async (product) => {
+  // Update URL with SKU parameter
+  const currentQuery = { ...route.query, sku: product.sku };
+  router.push({ query: currentQuery });
+
   selectedProduct.value = product;
   loadingLive.value = true;
   liveProduct.value = null;
@@ -221,6 +226,13 @@ const handleViewProduct = async (product) => {
   try {
     const result = await productsAPI.getLiveProduct(product.sku);
     liveProduct.value = result.product;
+
+    // Track modal view as pageview in Fathom
+    if (window.fathom) {
+      window.fathom.trackPageview({
+        url: window.location.origin + route.fullPath
+      });
+    }
   } catch (error) {
     console.error('Failed to fetch live product:', error);
     liveProduct.value = product; // Fallback to cached data
@@ -232,7 +244,73 @@ const handleViewProduct = async (product) => {
 const closeModal = () => {
   selectedProduct.value = null;
   liveProduct.value = null;
+
+  // Remove SKU from URL
+  const currentQuery = { ...route.query };
+  delete currentQuery.sku;
+  router.push({ query: currentQuery });
 };
+
+const openModalFromUrl = async (sku) => {
+  if (!sku) return;
+
+  try {
+    // Find product in current results
+    let product = products.value.find(p => p.sku === sku);
+
+    // If not found, fetch from API
+    if (!product) {
+      const result = await productsAPI.getLiveProduct(sku);
+      product = result.product;
+    }
+
+    if (product) {
+      selectedProduct.value = product;
+      loadingLive.value = true;
+      liveProduct.value = null;
+
+      try {
+        const result = await productsAPI.getLiveProduct(sku);
+        liveProduct.value = result.product;
+
+        // Track modal view as pageview in Fathom
+        if (window.fathom) {
+          window.fathom.trackPageview({
+            url: window.location.origin + route.fullPath
+          });
+        }
+      } catch (error) {
+        console.error('Failed to fetch live product:', error);
+        liveProduct.value = product;
+      } finally {
+        loadingLive.value = false;
+      }
+    }
+  } catch (error) {
+    console.error('Failed to open product modal from URL:', error);
+  }
+};
+
+// On mount, check if URL has SKU parameter
+onMounted(() => {
+  const urlSku = route.query.sku;
+  if (urlSku) {
+    openModalFromUrl(urlSku);
+  }
+});
+
+// Watch for SKU query parameter changes
+watch(() => route.query.sku, (newSku, oldSku) => {
+  if (newSku !== oldSku) {
+    if (newSku) {
+      openModalFromUrl(newSku);
+    } else if (!newSku && selectedProduct.value) {
+      // Close modal if SKU removed from URL (browser back button)
+      selectedProduct.value = null;
+      liveProduct.value = null;
+    }
+  }
+});
 </script>
 
 <style scoped>

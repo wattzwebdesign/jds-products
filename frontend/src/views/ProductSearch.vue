@@ -508,6 +508,10 @@ const handleProductClick = async (product) => {
     return;
   }
 
+  // Update URL with SKU parameter
+  const currentQuery = { ...route.query, sku: product.sku };
+  router.push({ query: currentQuery });
+
   selectedProduct.value = product;
   loadingLive.value = true;
   liveProduct.value = null;
@@ -516,6 +520,13 @@ const handleProductClick = async (product) => {
   try {
     const result = await productsAPI.getLiveProduct(product.sku);
     liveProduct.value = result.product;
+
+    // Track modal view as pageview in Fathom
+    if (window.fathom) {
+      window.fathom.trackPageview({
+        url: window.location.origin + route.fullPath
+      });
+    }
 
     // Debug logging
     console.log('Live product data:', result.product);
@@ -534,6 +545,11 @@ const closeModal = () => {
   selectedProduct.value = null;
   liveProduct.value = null;
   imageLoadError.value = false;
+
+  // Remove SKU from URL
+  const currentQuery = { ...route.query };
+  delete currentQuery.sku;
+  router.push({ query: currentQuery });
 };
 
 const handleImageLoadError = (e) => {
@@ -560,6 +576,47 @@ const getLocalQty = (product) => {
   return product.localQty ?? product.localQuantity ?? 0;
 };
 
+const openModalFromUrl = async (sku) => {
+  if (!sku || !authStore.isAuthenticated) return;
+
+  try {
+    // First try to find product in current results
+    let product = products.value.find(p => p.sku === sku);
+
+    // If not in current results, fetch from API
+    if (!product) {
+      const result = await productsAPI.getLiveProduct(sku);
+      product = result.product;
+    }
+
+    if (product) {
+      selectedProduct.value = product;
+      loadingLive.value = true;
+      liveProduct.value = null;
+      imageLoadError.value = false;
+
+      try {
+        const result = await productsAPI.getLiveProduct(sku);
+        liveProduct.value = result.product;
+
+        // Track modal view as pageview in Fathom
+        if (window.fathom) {
+          window.fathom.trackPageview({
+            url: window.location.origin + route.fullPath
+          });
+        }
+      } catch (error) {
+        console.error('Failed to fetch live product:', error);
+        liveProduct.value = product;
+      } finally {
+        loadingLive.value = false;
+      }
+    }
+  } catch (error) {
+    console.error('Failed to open product modal from URL:', error);
+  }
+};
+
 onMounted(() => {
   // Load available colors for filter
   loadColors();
@@ -569,6 +626,7 @@ onMounted(() => {
   const urlColor = route.query.color || '';
   const urlPage = parseInt(route.query.page) || 1;
   const urlLimit = parseInt(route.query.limit) || 20;
+  const urlSku = route.query.sku;
 
   // Set values from URL
   if (urlQuery) searchQuery.value = urlQuery;
@@ -579,11 +637,28 @@ onMounted(() => {
   if (urlLimit !== 20) pagination.value.limit = urlLimit;
 
   // Perform initial search (with URL params if present, or show all products)
-  performSearch(urlPage, false); // false = don't update URL again
+  performSearch(urlPage, false).then(() => {
+    // After search completes, open modal if SKU in URL
+    if (urlSku) {
+      openModalFromUrl(urlSku);
+    }
+  });
 });
 
 // Watch for route changes (e.g., clicking "All Products" link)
 watch(() => route.query, (newQuery, oldQuery) => {
+  // Handle SKU query parameter changes (opening/closing modal)
+  if (newQuery.sku !== oldQuery.sku) {
+    if (newQuery.sku && authStore.isAuthenticated) {
+      openModalFromUrl(newQuery.sku);
+    } else if (!newQuery.sku && selectedProduct.value) {
+      // Close modal if SKU removed from URL (e.g., browser back button)
+      selectedProduct.value = null;
+      liveProduct.value = null;
+      imageLoadError.value = false;
+    }
+  }
+
   // If query params are cleared (navigating to /products without params)
   if (Object.keys(newQuery).length === 0 && Object.keys(oldQuery).length > 0) {
     // Reset search and show all products
