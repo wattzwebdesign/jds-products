@@ -102,6 +102,11 @@ router.get('/:sku/live', async (req, res) => {
 
     const liveProduct = products[0];
 
+    // Get existing product data from database (for imageUrl and other details)
+    const dbProduct = await prisma.product.findUnique({
+      where: { sku }
+    });
+
     // Update local database with fresh data
     await prisma.product.upsert({
       where: { sku },
@@ -119,9 +124,23 @@ router.get('/:sku/live', async (req, res) => {
       }
     });
 
+    // Merge database fields (imageUrl, etc.) with live API data
+    const mergedProduct = {
+      ...liveProduct,
+      imageUrl: dbProduct?.imageUrl || liveProduct.imageUrl,
+      basePrice: dbProduct?.basePrice || liveProduct.basePrice,
+      category: dbProduct?.category || liveProduct.category,
+      caseQty: dbProduct?.caseQty,
+      color: dbProduct?.color,
+      length: dbProduct?.length,
+      height: dbProduct?.height,
+      width: dbProduct?.width,
+      lastPriceChange: dbProduct?.lastPriceChange,
+    };
+
     res.json({
       success: true,
-      product: liveProduct
+      product: mergedProduct
     });
   } catch (error) {
     console.error('Live product fetch error:', error);
