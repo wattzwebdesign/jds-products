@@ -508,6 +508,10 @@ onUnmounted(() => {
   font-size: 20px;
 }
 
+.sync-section h2 {
+  color: white !important;
+}
+
 .instructions {
   margin: 0 0 30px 0;
   color: #666;
