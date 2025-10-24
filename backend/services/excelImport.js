@@ -5,7 +5,13 @@ const prisma = new PrismaClient();
 
 /**
  * Parse Excel file and import products into database
- * Expected columns: SKU, Product Name, Description, Category, Price, Available Qty, Local Qty, Image URL
+ * JDS Excel Format:
+ * - ITEM: SKU code
+ * - SHORT DESCRIPTION: Product name
+ * - LONG DESCRIPTION: Detailed description
+ * - CLASS: Category
+ * - LESS THAN CASE PRICE: Base price
+ * - LARGE IMAGE: Product image URL
  */
 export async function importProductsFromExcel(filePath) {
   try {
@@ -19,17 +25,25 @@ export async function importProductsFromExcel(filePath) {
 
     console.log(`Found ${rawData.length} products in Excel file`);
 
-    // Map Excel columns to database fields (adjust column names based on your Excel file)
-    const products = rawData.map(row => ({
-      sku: String(row['SKU'] || row['sku'] || '').trim(),
-      name: String(row['Product Name'] || row['Name'] || row['name'] || '').trim(),
-      description: row['Description'] || row['description'] || null,
-      category: row['Category'] || row['category'] || null,
-      basePrice: row['Price'] || row['price'] || null,
-      availableQty: parseInt(row['Available Qty'] || row['availableQty'] || row['available'] || 0),
-      localQty: parseInt(row['Local Qty'] || row['localQty'] || row['local'] || 0),
-      imageUrl: row['Image URL'] || row['imageUrl'] || row['image'] || null,
-    })).filter(product => product.sku); // Only include products with valid SKU
+    // Map JDS Excel columns to database fields
+    const products = rawData.map(row => {
+      // Combine DESCRIPTION 1 and DESCRIPTION 2 for full name if SHORT DESCRIPTION is not available
+      const shortDesc = row['SHORT DESCRIPTION'] || '';
+      const desc1 = row['DESCRIPTION 1'] || '';
+      const desc2 = row['DESCRIPTION 2'] || '';
+      const combinedName = shortDesc || (desc1 + (desc2 ? ' ' + desc2 : '')).trim();
+
+      return {
+        sku: String(row['ITEM'] || '').trim(),
+        name: combinedName || 'Unknown Product',
+        description: row['LONG DESCRIPTION'] || null,
+        category: row['CLASS'] || null,
+        basePrice: parseFloat(row['LESS THAN CASE PRICE']) || null,
+        availableQty: 0, // Will be updated from JDS API
+        localQty: 0, // Will be updated from JDS API
+        imageUrl: row['LARGE IMAGE'] || row['SMALL IMAGE'] || null,
+      };
+    }).filter(product => product.sku); // Only include products with valid SKU
 
     console.log(`Mapped ${products.length} valid products`);
 
