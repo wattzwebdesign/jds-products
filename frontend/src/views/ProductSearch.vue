@@ -9,7 +9,6 @@
 
           <!-- Show when authenticated -->
           <template v-else>
-            <router-link v-if="hasSearched && products.length === 0 && !loading" to="/sku-lookup" class="btn btn-lookup">📦 Add Missing Product</router-link>
             <router-link to="/admin" class="btn btn-admin">⚙ Admin</router-link>
             <span>{{ authStore.user?.username }}</span>
             <button @click="handleLogout" class="btn btn-logout">Logout</button>
@@ -172,6 +171,11 @@
         </svg>
         <p>No products found</p>
         <span>Try adjusting your search or filters</span>
+
+        <!-- Add Missing Product button - only show when authenticated -->
+        <router-link v-if="authStore.isAuthenticated" to="/sku-lookup" class="btn btn-add-missing">
+          📦 Add Missing Product
+        </router-link>
       </div>
 
       <div v-else class="welcome">
@@ -986,6 +990,27 @@ onMounted(() => {
 .welcome p {
   color: #999;
   font-size: 14px;
+}
+
+.btn-add-missing {
+  margin-top: 24px;
+  padding: 12px 24px;
+  background: #0F3F92;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-block;
+  transition: all 0.3s;
+}
+
+.btn-add-missing:hover {
+  background: #0d3577;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(15, 63, 146, 0.3);
 }
 
 .modal-overlay {

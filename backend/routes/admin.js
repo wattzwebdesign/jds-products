@@ -189,17 +189,32 @@ router.post('/add-missing-products', authenticateToken, async (req, res) => {
         });
 
         // Create product object from JDS API data
+        // Try multiple possible field names for image URL
+        const imageUrl = jdsProduct.imageUrl || jdsProduct.image_url || jdsProduct.ImageURL || jdsProduct.image || null;
+
         const productData = {
           sku: jdsProduct.sku,
           name: jdsProduct.name || 'Unknown Product',
           description: jdsProduct.description || null,
-          basePrice: jdsProduct.pricing?.price || null,
+          basePrice: jdsProduct.pricing?.price || jdsProduct.price || null,
           availableQty: jdsProduct.availability?.available || 0,
           localQty: jdsProduct.availability?.local || 0,
-          imageUrl: jdsProduct.imageUrl || null,
+          imageUrl: imageUrl,
           category: jdsProduct.category || null,
+          caseQty: jdsProduct.caseQty || jdsProduct.case_qty || null,
+          color: jdsProduct.color || null,
+          length: jdsProduct.length || null,
+          width: jdsProduct.width || null,
+          height: jdsProduct.height || null,
           lastSynced: new Date()
         };
+
+        // Log the JDS product data to help debug
+        console.log(`Processing ${jdsProduct.sku}:`, {
+          hasImageUrl: !!imageUrl,
+          imageUrlValue: imageUrl,
+          jdsProductKeys: Object.keys(jdsProduct)
+        });
 
         if (existing) {
           // Update existing product
