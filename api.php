@@ -45,8 +45,8 @@ if ($apiPath[0] !== '/') {
     $apiPath = '/' . $apiPath;
 }
 
-// Backend URL
-$backendUrl = 'http://localhost:3000' . $apiPath;
+// Backend URL - add /api prefix since backend routes expect it
+$backendUrl = 'http://localhost:3000/api' . $apiPath;
 
 // Add query string if present
 if (isset($_SERVER['QUERY_STRING']) && !empty($_SERVER['QUERY_STRING'])) {
