@@ -78,22 +78,22 @@
             >
               ×
             </button>
-          </div>
 
-          <!-- Color Dropdown -->
-          <div v-if="showColorDropdown && filteredColors.length > 0" class="color-dropdown">
-            <div
-              v-for="colorOption in filteredColors"
-              :key="colorOption.color"
-              @mousedown.prevent="selectColor(colorOption.color)"
-              class="color-option"
-            >
+            <!-- Color Dropdown -->
+            <div v-if="showColorDropdown && filteredColors.length > 0" class="color-dropdown">
               <div
-                class="color-swatch-small"
-                :style="{ background: getColorHex(colorOption.color) }"
-              ></div>
-              <span class="color-name">{{ colorOption.color }}</span>
-              <span class="color-count">({{ colorOption.count }})</span>
+                v-for="colorOption in filteredColors"
+                :key="colorOption.color"
+                @mousedown.prevent="selectColor(colorOption.color)"
+                class="color-option"
+              >
+                <div
+                  class="color-swatch-small"
+                  :style="{ background: getColorHex(colorOption.color) }"
+                ></div>
+                <span class="color-name">{{ colorOption.color }}</span>
+                <span class="color-count">({{ colorOption.count }})</span>
+              </div>
             </div>
           </div>
 
