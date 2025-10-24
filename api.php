@@ -10,16 +10,14 @@ $debugMode = isset($_GET['debug']) ? true : false;
 if ($debugMode) {
     header('Content-Type: application/json');
     echo json_encode([
-        'message' => 'API Proxy Debug Info',
+        'message' => 'API Proxy Debug Info (nginx environment)',
+        'server' => $_SERVER['SERVER_SOFTWARE'] ?? 'unknown',
+        'endpoint_param' => $_GET['endpoint'] ?? 'NOT SET',
+        'will_proxy_to' => 'http://localhost:3000' . ($_GET['endpoint'] ?? '/health'),
         'REQUEST_URI' => $_SERVER['REQUEST_URI'],
         'SCRIPT_NAME' => $_SERVER['SCRIPT_NAME'],
-        'PATH_INFO' => $_SERVER['PATH_INFO'] ?? 'NOT SET',
-        'REDIRECT_API_PATH' => $_SERVER['REDIRECT_API_PATH'] ?? 'NOT SET',
         'QUERY_STRING' => $_SERVER['QUERY_STRING'] ?? '',
-        'REQUEST_METHOD' => $_SERVER['REQUEST_METHOD'],
-        'all_env_vars' => array_filter($_SERVER, function($key) {
-            return strpos($key, 'REDIRECT') === 0 || strpos($key, 'PATH') !== false;
-        }, ARRAY_FILTER_USE_KEY)
+        'REQUEST_METHOD' => $_SERVER['REQUEST_METHOD']
     ], JSON_PRETTY_PRINT);
     exit();
 }
@@ -35,30 +33,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit();
 }
 
-// Get the request path - handle multiple formats
-$requestUri = $_SERVER['REQUEST_URI'];
-
-// Try multiple methods to extract the API path
-if (isset($_SERVER['PATH_INFO'])) {
-    // Method 1: PATH_INFO is set
-    $apiPath = $_SERVER['PATH_INFO'];
-} elseif (isset($_SERVER['REDIRECT_API_PATH'])) {
-    // Method 2: Environment variable from .htaccess rewrite
-    $apiPath = $_SERVER['REDIRECT_API_PATH'];
-} else {
-    // Method 3: Extract from REQUEST_URI
-    // Remove query string
-    $path = parse_url($requestUri, PHP_URL_PATH);
-
-    // Remove /api.php prefix if present
-    if (strpos($path, '/api.php/') === 0) {
-        $apiPath = substr($path, 8); // Remove '/api.php'
-    } elseif (strpos($path, '/api.php') === 0) {
-        $apiPath = '/health'; // Default test endpoint
-    } else {
-        $apiPath = $path;
-    }
-}
+// Get the API endpoint from query parameter (nginx doesn't support PATH_INFO via .htaccess)
+// Frontend should call: /api.php?endpoint=/auth/register
+$apiPath = $_GET['endpoint'] ?? '/health';
 
 // Ensure path starts with /
 if (empty($apiPath) || $apiPath === '/') {

@@ -3,12 +3,28 @@ import axios from 'axios';
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
 
 // Create axios instance
+// Note: For production (nginx), we use api.php with query parameters
+// For development (local), we use direct API calls
+const isProduction = API_BASE_URL.includes('1wp.site');
 const apiClient = axios.create({
-  baseURL: `${API_BASE_URL}/api`,
+  baseURL: isProduction ? `${API_BASE_URL}/api.php` : `${API_BASE_URL}/api`,
   headers: {
     'Content-Type': 'application/json'
   }
 });
+
+// Transform requests for production nginx environment
+if (isProduction) {
+  apiClient.interceptors.request.use(
+    (config) => {
+      // Convert /auth/register to ?endpoint=/auth/register
+      const endpoint = config.url;
+      config.url = '';
+      config.params = { ...config.params, endpoint };
+      return config;
+    }
+  );
+}
 
 // Add token to requests if available
 apiClient.interceptors.request.use(
