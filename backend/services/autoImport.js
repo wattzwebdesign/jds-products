@@ -85,18 +85,31 @@ export async function autoImportProducts() {
 async function parseCSV(csvData) {
   return new Promise((resolve, reject) => {
     const products = [];
+    let totalRows = 0;
+    let skippedRows = 0;
+    let emptySkus = 0;
+    const skippedSamples = [];
+
     const stream = Readable.from(csvData);
 
     stream
       .pipe(csv())
       .on('data', (row) => {
+        totalRows++;
+
+        // Log progress every 10k rows
+        if (totalRows % 10000 === 0) {
+          console.log(`[CSV Parser] Processed ${totalRows} rows, ${products.length} valid products so far...`);
+        }
+
         // Map JDS CSV columns to database fields
         const shortDesc = row['SHORT DESCRIPTION'] || '';
         const desc1 = row['DESCRIPTION 1'] || '';
         const desc2 = row['DESCRIPTION 2'] || '';
         const combinedName = shortDesc || (desc1 + (desc2 ? ' ' + desc2 : '')).trim();
 
-        const sku = String(row['ITEM'] || '').trim();
+        const rawSku = row['ITEM'];
+        const sku = String(rawSku || '').trim();
 
         if (sku) {
           products.push({
@@ -109,14 +122,37 @@ async function parseCSV(csvData) {
             localQty: 0, // Will be updated from JDS API
             imageUrl: row['LARGE IMAGE'] || row['SMALL IMAGE'] || null,
           });
+        } else {
+          skippedRows++;
+          emptySkus++;
+
+          // Collect first 5 samples of skipped rows for debugging
+          if (skippedSamples.length < 5) {
+            skippedSamples.push({
+              row: totalRows,
+              rawItem: rawSku,
+              shortDesc: shortDesc.substring(0, 50),
+              desc1: desc1.substring(0, 50)
+            });
+          }
         }
       })
       .on('end', () => {
-        console.log(`[CSV Parser] Successfully parsed ${products.length} products`);
+        console.log(`[CSV Parser] === Parsing Complete ===`);
+        console.log(`[CSV Parser] Total rows in CSV: ${totalRows}`);
+        console.log(`[CSV Parser] Valid products: ${products.length}`);
+        console.log(`[CSV Parser] Skipped rows: ${skippedRows}`);
+        console.log(`[CSV Parser] Empty SKUs: ${emptySkus}`);
+
+        if (skippedSamples.length > 0) {
+          console.log(`[CSV Parser] Sample of skipped rows:`, JSON.stringify(skippedSamples, null, 2));
+        }
+
         resolve(products);
       })
       .on('error', (error) => {
         console.error('[CSV Parser] Error:', error);
+        console.error(`[CSV Parser] Failed at row ${totalRows}`);
         reject(error);
       });
   });
