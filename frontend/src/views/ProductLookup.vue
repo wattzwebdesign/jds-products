@@ -164,6 +164,14 @@ const handleSearch = async () => {
     const result = await productsAPI.lookupBySKUs(skuInput.value);
     searchResult.value = result;
     products.value = result.products || [];
+
+    // Track SKU lookup with Fathom Analytics
+    if (window.fathom && result.requestedCount) {
+      window.fathom.trackEvent('SKU Lookup', {
+        _site_id: 'UMVXBRTN',
+        _value: result.requestedCount // Number of SKUs searched
+      });
+    }
   } catch (error) {
     errorMessage.value = error.response?.data?.error || 'Failed to search products. Please try again.';
     products.value = [];

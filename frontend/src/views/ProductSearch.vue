@@ -336,6 +336,20 @@ const performSearch = async (page = 1, updateUrl = true) => {
     products.value = result.products || [];
     pagination.value = result.pagination || pagination.value;
 
+    // Track search event with Fathom Analytics (only for new searches, not pagination)
+    if (page === 1 && window.fathom) {
+      const eventData = {
+        _site_id: 'UMVXBRTN',
+        _value: pagination.value.total || 0 // Track number of results
+      };
+
+      if (searchQuery.value) {
+        window.fathom.trackEvent('Product Search: ' + searchQuery.value.substring(0, 50), eventData);
+      } else if (selectedColor.value) {
+        window.fathom.trackEvent('Color Filter: ' + selectedColor.value, eventData);
+      }
+    }
+
     // Update URL with search parameters
     if (updateUrl) {
       const query = {};
