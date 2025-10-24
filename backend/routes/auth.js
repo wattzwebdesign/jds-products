@@ -9,11 +9,15 @@ const prisma = new PrismaClient();
 // Register new user
 router.post('/register', async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { username, password, jdsApiToken } = req.body;
 
     // Validate input
-    if (!email || !password) {
-      return res.status(400).json({ error: 'Email and password are required' });
+    if (!username || !password) {
+      return res.status(400).json({ error: 'Username and password are required' });
+    }
+
+    if (!jdsApiToken) {
+      return res.status(400).json({ error: 'JDS API token is required' });
     }
 
     if (password.length < 6) {
@@ -22,11 +26,11 @@ router.post('/register', async (req, res) => {
 
     // Check if user already exists
     const existingUser = await prisma.user.findUnique({
-      where: { email }
+      where: { username }
     });
 
     if (existingUser) {
-      return res.status(400).json({ error: 'User with this email already exists' });
+      return res.status(400).json({ error: 'User with this username already exists' });
     }
 
     // Hash password
@@ -35,14 +39,15 @@ router.post('/register', async (req, res) => {
     // Create user
     const user = await prisma.user.create({
       data: {
-        email,
-        password: hashedPassword
+        username,
+        password: hashedPassword,
+        jdsApiToken
       }
     });
 
     // Generate JWT token
     const token = jwt.sign(
-      { userId: user.id, email: user.email },
+      { userId: user.id, username: user.username },
       process.env.JWT_SECRET,
       { expiresIn: '7d' }
     );
@@ -52,7 +57,8 @@ router.post('/register', async (req, res) => {
       token,
       user: {
         id: user.id,
-        email: user.email
+        username: user.username,
+        hasJdsToken: !!user.jdsApiToken
       }
     });
   } catch (error) {
@@ -64,32 +70,32 @@ router.post('/register', async (req, res) => {
 // Login
 router.post('/login', async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { username, password } = req.body;
 
     // Validate input
-    if (!email || !password) {
-      return res.status(400).json({ error: 'Email and password are required' });
+    if (!username || !password) {
+      return res.status(400).json({ error: 'Username and password are required' });
     }
 
     // Find user
     const user = await prisma.user.findUnique({
-      where: { email }
+      where: { username }
     });
 
     if (!user) {
-      return res.status(401).json({ error: 'Invalid email or password' });
+      return res.status(401).json({ error: 'Invalid username or password' });
     }
 
     // Verify password
     const validPassword = await bcrypt.compare(password, user.password);
 
     if (!validPassword) {
-      return res.status(401).json({ error: 'Invalid email or password' });
+      return res.status(401).json({ error: 'Invalid username or password' });
     }
 
     // Generate JWT token
     const token = jwt.sign(
-      { userId: user.id, email: user.email },
+      { userId: user.id, username: user.username },
       process.env.JWT_SECRET,
       { expiresIn: '7d' }
     );
@@ -99,11 +105,43 @@ router.post('/login', async (req, res) => {
       token,
       user: {
         id: user.id,
-        email: user.email
+        username: user.username,
+        hasJdsToken: !!user.jdsApiToken
       }
     });
   } catch (error) {
     console.error('Login error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Update JDS API token (requires authentication)
+import { authenticateToken } from '../middleware/auth.js';
+
+router.put('/update-jds-token', authenticateToken, async (req, res) => {
+  try {
+    const { jdsApiToken } = req.body;
+
+    if (!jdsApiToken) {
+      return res.status(400).json({ error: 'JDS API token is required' });
+    }
+
+    // Update user's JDS token
+    const updatedUser = await prisma.user.update({
+      where: { id: req.user.userId },
+      data: { jdsApiToken }
+    });
+
+    res.json({
+      message: 'JDS API token updated successfully',
+      user: {
+        id: updatedUser.id,
+        username: updatedUser.username,
+        hasJdsToken: !!updatedUser.jdsApiToken
+      }
+    });
+  } catch (error) {
+    console.error('Update JDS token error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });

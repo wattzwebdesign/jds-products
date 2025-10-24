@@ -1,8 +1,10 @@
 import express from 'express';
 import jdsApiClient from '../services/jdsApiClient.js';
 import { authenticateToken } from '../middleware/auth.js';
+import { PrismaClient } from '@prisma/client';
 
 const router = express.Router();
+const prisma = new PrismaClient();
 
 // All product routes require authentication
 router.use(authenticateToken);
@@ -13,6 +15,19 @@ router.use(authenticateToken);
  */
 router.post('/lookup', async (req, res) => {
   try {
+    // Get user's JDS API token
+    const user = await prisma.user.findUnique({
+      where: { id: req.user.userId },
+      select: { jdsApiToken: true }
+    });
+
+    if (!user || !user.jdsApiToken) {
+      return res.status(400).json({
+        error: 'JDS API token not configured',
+        message: 'Please add your JDS API token in your profile settings'
+      });
+    }
+
     let skus = [];
 
     // Accept either an array of SKUs or a string input to parse
@@ -37,8 +52,8 @@ router.post('/lookup', async (req, res) => {
       });
     }
 
-    // Fetch products from JDS API
-    const products = await jdsApiClient.getProductDetailsBySkus(skus);
+    // Fetch products from JDS API using user's token
+    const products = await jdsApiClient.getProductDetailsBySkus(skus, user.jdsApiToken);
 
     // Check if any SKUs were not found
     const foundSkus = products.map(p => p.sku);

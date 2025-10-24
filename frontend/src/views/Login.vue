@@ -6,14 +6,14 @@
 
       <form @submit.prevent="handleLogin">
         <div class="form-group">
-          <label for="email">Email</label>
+          <label for="username">Username</label>
           <input
-            id="email"
-            v-model="email"
-            type="email"
-            placeholder="your@email.com"
+            id="username"
+            v-model="username"
+            type="text"
+            placeholder="Enter your username"
             required
-            autocomplete="email"
+            autocomplete="username"
           />
         </div>
 
@@ -54,7 +54,7 @@ import { useAuthStore } from '../stores/auth';
 const router = useRouter();
 const authStore = useAuthStore();
 
-const email = ref('');
+const username = ref('');
 const password = ref('');
 const errorMessage = ref('');
 const loading = ref(false);
@@ -63,7 +63,7 @@ const handleLogin = async () => {
   errorMessage.value = '';
   loading.value = true;
 
-  const result = await authStore.login(email.value, password.value);
+  const result = await authStore.login(username.value, password.value);
 
   loading.value = false;
 

@@ -25,9 +25,9 @@ export const useAuthStore = defineStore('auth', () => {
     localStorage.removeItem('user');
   };
 
-  const register = async (email, password) => {
+  const register = async (username, password, jdsApiToken) => {
     try {
-      const data = await authAPI.register(email, password);
+      const data = await authAPI.register(username, password, jdsApiToken);
       setAuth(data);
       return { success: true, data };
     } catch (error) {
@@ -36,13 +36,26 @@ export const useAuthStore = defineStore('auth', () => {
     }
   };
 
-  const login = async (email, password) => {
+  const login = async (username, password) => {
     try {
-      const data = await authAPI.login(email, password);
+      const data = await authAPI.login(username, password);
       setAuth(data);
       return { success: true, data };
     } catch (error) {
       const message = error.response?.data?.error || 'Login failed';
+      return { success: false, error: message };
+    }
+  };
+
+  const updateJdsToken = async (jdsApiToken) => {
+    try {
+      const data = await authAPI.updateJdsToken(jdsApiToken);
+      // Update user in store
+      user.value = data.user;
+      localStorage.setItem('user', JSON.stringify(data.user));
+      return { success: true, data };
+    } catch (error) {
+      const message = error.response?.data?.error || 'Failed to update JDS token';
       return { success: false, error: message };
     }
   };
@@ -57,6 +70,7 @@ export const useAuthStore = defineStore('auth', () => {
     isAuthenticated,
     register,
     login,
+    updateJdsToken,
     logout
   };
 });

@@ -4,7 +4,7 @@
       <div class="header-content">
         <h1>JDS Product Lookup</h1>
         <div class="user-info">
-          <span>{{ authStore.user?.email }}</span>
+          <span>{{ authStore.user?.username }}</span>
           <button @click="handleLogout" class="btn btn-logout">Logout</button>
         </div>
       </div>

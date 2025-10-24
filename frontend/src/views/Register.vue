@@ -6,14 +6,14 @@
 
       <form @submit.prevent="handleRegister">
         <div class="form-group">
-          <label for="email">Email</label>
+          <label for="username">Username</label>
           <input
-            id="email"
-            v-model="email"
-            type="email"
-            placeholder="your@email.com"
+            id="username"
+            v-model="username"
+            type="text"
+            placeholder="Choose a username"
             required
-            autocomplete="email"
+            autocomplete="username"
           />
         </div>
 
@@ -42,6 +42,18 @@
           />
         </div>
 
+        <div class="form-group">
+          <label for="jdsApiToken">JDS API Token</label>
+          <input
+            id="jdsApiToken"
+            v-model="jdsApiToken"
+            type="text"
+            placeholder="Enter your JDS API token"
+            required
+          />
+          <small class="help-text">You can find your API token in your JDS account settings</small>
+        </div>
+
         <div v-if="errorMessage" class="error-message">
           {{ errorMessage }}
         </div>
@@ -67,9 +79,10 @@ import { useAuthStore } from '../stores/auth';
 const router = useRouter();
 const authStore = useAuthStore();
 
-const email = ref('');
+const username = ref('');
 const password = ref('');
 const confirmPassword = ref('');
+const jdsApiToken = ref('');
 const errorMessage = ref('');
 const loading = ref(false);
 
@@ -88,9 +101,15 @@ const handleRegister = async () => {
     return;
   }
 
+  // Validate JDS token
+  if (!jdsApiToken.value || jdsApiToken.value.trim() === '') {
+    errorMessage.value = 'JDS API token is required';
+    return;
+  }
+
   loading.value = true;
 
-  const result = await authStore.register(email.value, password.value);
+  const result = await authStore.register(username.value, password.value, jdsApiToken.value);
 
   loading.value = false;
 
@@ -210,5 +229,12 @@ input:focus {
 
 .auth-link a:hover {
   text-decoration: underline;
+}
+
+.help-text {
+  display: block;
+  margin-top: 4px;
+  color: #999;
+  font-size: 12px;
 }
 </style>

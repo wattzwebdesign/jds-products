@@ -3,21 +3,17 @@ import axios from 'axios';
 class JDSApiClient {
   constructor() {
     this.baseURL = process.env.JDS_API_BASE_URL || 'https://api.jdsapp.com';
-    this.token = process.env.JDS_API_TOKEN;
-
-    if (!this.token) {
-      console.warn('Warning: JDS_API_TOKEN not set in environment variables');
-    }
   }
 
   /**
-   * Get product details by SKUs
+   * Get product details by SKUs using user's API token
    * @param {string[]} skus - Array of SKU codes
+   * @param {string} userToken - User's JDS API token
    * @returns {Promise<Object[]>} Array of product objects
    */
-  async getProductDetailsBySkus(skus) {
-    if (!this.token) {
-      throw new Error('JDS API token not configured');
+  async getProductDetailsBySkus(skus, userToken) {
+    if (!userToken) {
+      throw new Error('JDS API token not provided');
     }
 
     if (!skus || skus.length === 0) {
@@ -31,10 +27,10 @@ class JDSApiClient {
         {
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${this.token}`
+            'Authorization': `Bearer ${userToken}`
           },
           params: {
-            token: this.token
+            token: userToken
           }
         }
       );

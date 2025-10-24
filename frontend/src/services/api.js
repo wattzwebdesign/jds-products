@@ -40,13 +40,18 @@ apiClient.interceptors.response.use(
 
 // Auth API
 export const authAPI = {
-  register: async (email, password) => {
-    const response = await apiClient.post('/auth/register', { email, password });
+  register: async (username, password, jdsApiToken) => {
+    const response = await apiClient.post('/auth/register', { username, password, jdsApiToken });
     return response.data;
   },
 
-  login: async (email, password) => {
-    const response = await apiClient.post('/auth/login', { email, password });
+  login: async (username, password) => {
+    const response = await apiClient.post('/auth/login', { username, password });
+    return response.data;
+  },
+
+  updateJdsToken: async (jdsApiToken) => {
+    const response = await apiClient.put('/auth/update-jds-token', { jdsApiToken });
     return response.data;
   }
 };
