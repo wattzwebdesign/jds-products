@@ -81,7 +81,7 @@
             v-for="product in products"
             :key="product.sku"
             :product="product"
-            @click="handleProductClick(product)"
+            @view-details="handleProductClick(product)"
           />
         </div>
 
@@ -130,11 +130,63 @@
 
         <div v-if="loadingLive" class="loading-live">
           <div class="spinner"></div>
-          <p>Fetching live data...</p>
+          <p>Fetching live inventory & pricing...</p>
         </div>
 
-        <div v-else-if="liveProduct">
-          <ProductCard :product="liveProduct" :detailed="true" />
+        <div v-else-if="liveProduct" class="live-product-details">
+          <div class="detail-header">
+            <div class="detail-image">
+              <img v-if="liveProduct.imageUrl" :src="liveProduct.imageUrl" :alt="liveProduct.name" />
+              <div v-else class="no-image">
+                <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2" stroke-width="2"/>
+                  <circle cx="8.5" cy="8.5" r="1.5" stroke-width="2"/>
+                  <polyline points="21 15 16 10 5 21" stroke-width="2"/>
+                </svg>
+                <span>No Image</span>
+              </div>
+            </div>
+            <div class="detail-info">
+              <h2>{{ liveProduct.name }}</h2>
+              <span class="detail-sku">SKU: {{ liveProduct.sku }}</span>
+              <p class="detail-description">{{ liveProduct.description || 'No description available' }}</p>
+            </div>
+          </div>
+
+          <div class="detail-pricing">
+            <h3>Live Pricing & Inventory</h3>
+            <div class="pricing-table">
+              <div class="pricing-row" v-if="liveProduct.basePrice || liveProduct.lessThanCasePrice">
+                <span class="pricing-label">Less than case:</span>
+                <span class="pricing-value">${{ formatPrice(liveProduct.basePrice || liveProduct.lessThanCasePrice) }}</span>
+              </div>
+              <div class="pricing-row" v-if="liveProduct.oneCase">
+                <span class="pricing-label">1 case ({{ liveProduct.caseQuantity || '-' }} units):</span>
+                <span class="pricing-value">${{ formatPrice(liveProduct.oneCase) }}</span>
+              </div>
+              <div class="pricing-row" v-if="liveProduct.fiveCases">
+                <span class="pricing-label">5+ cases:</span>
+                <span class="pricing-value">${{ formatPrice(liveProduct.fiveCases) }}</span>
+              </div>
+              <div class="pricing-row" v-if="liveProduct.tenCases">
+                <span class="pricing-label">10+ cases:</span>
+                <span class="pricing-value">${{ formatPrice(liveProduct.tenCases) }}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="detail-availability">
+            <div class="availability-card" :class="getAvailableQty(liveProduct) > 0 ? 'in-stock' : 'out-of-stock'">
+              <div class="availability-label">Available Quantity</div>
+              <div class="availability-number">{{ getAvailableQty(liveProduct) }}</div>
+              <div class="availability-status">{{ getAvailableQty(liveProduct) > 0 ? 'In Stock' : 'Out of Stock' }}</div>
+            </div>
+            <div class="availability-card">
+              <div class="availability-label">Local Quantity</div>
+              <div class="availability-number">{{ getLocalQty(liveProduct) }}</div>
+              <div class="availability-status">{{ getLocalQty(liveProduct) > 0 ? 'Available Locally' : 'Not in Local Stock' }}</div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -248,6 +300,19 @@ const closeModal = () => {
 const handleLogout = () => {
   authStore.logout();
   router.push('/login');
+};
+
+const formatPrice = (price) => {
+  if (price === null || price === undefined) return '-';
+  return Number(price).toFixed(2);
+};
+
+const getAvailableQty = (product) => {
+  return product.availableQty ?? product.availableQuantity ?? 0;
+};
+
+const getLocalQty = (product) => {
+  return product.localQty ?? product.localQuantity ?? 0;
 };
 
 onMounted(() => {
@@ -574,7 +639,184 @@ onMounted(() => {
   color: #333;
 }
 
+.live-product-details {
+  padding: 20px 0;
+}
+
+.detail-header {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: 30px;
+  margin-bottom: 30px;
+  padding-bottom: 30px;
+  border-bottom: 2px solid #eee;
+}
+
+.detail-image {
+  width: 100%;
+  height: 300px;
+  background: #f5f5f5;
+  border-radius: 12px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.detail-image img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.detail-image .no-image {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #ccc;
+  gap: 12px;
+}
+
+.detail-image .no-image span {
+  font-size: 16px;
+  color: #999;
+}
+
+.detail-info h2 {
+  margin: 0 0 12px 0;
+  color: #333;
+  font-size: 24px;
+  line-height: 1.3;
+}
+
+.detail-sku {
+  display: inline-block;
+  background: #667eea;
+  color: white;
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 16px;
+}
+
+.detail-description {
+  margin: 16px 0 0 0;
+  color: #666;
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.detail-pricing {
+  margin-bottom: 30px;
+}
+
+.detail-pricing h3 {
+  margin: 0 0 16px 0;
+  color: #333;
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.pricing-table {
+  background: #f9f9f9;
+  padding: 20px;
+  border-radius: 12px;
+}
+
+.pricing-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 12px 0;
+  border-bottom: 1px solid #eee;
+  font-size: 15px;
+}
+
+.pricing-row:last-child {
+  border-bottom: none;
+}
+
+.pricing-label {
+  color: #666;
+  font-weight: 500;
+}
+
+.pricing-value {
+  color: #333;
+  font-weight: 700;
+  font-size: 16px;
+}
+
+.detail-availability {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+}
+
+.availability-card {
+  background: #f9f9f9;
+  padding: 24px;
+  border-radius: 12px;
+  text-align: center;
+  border: 2px solid #eee;
+}
+
+.availability-card.in-stock {
+  background: #f0fdf4;
+  border-color: #86efac;
+}
+
+.availability-card.out-of-stock {
+  background: #fef2f2;
+  border-color: #fca5a5;
+}
+
+.availability-label {
+  font-size: 13px;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 12px;
+  font-weight: 600;
+}
+
+.availability-number {
+  font-size: 48px;
+  font-weight: 700;
+  margin: 8px 0;
+}
+
+.availability-card.in-stock .availability-number {
+  color: #22c55e;
+}
+
+.availability-card.out-of-stock .availability-number {
+  color: #ef4444;
+}
+
+.availability-status {
+  font-size: 14px;
+  font-weight: 600;
+  margin-top: 8px;
+}
+
+.availability-card.in-stock .availability-status {
+  color: #16a34a;
+}
+
+.availability-card.out-of-stock .availability-status {
+  color: #dc2626;
+}
+
 @media (max-width: 768px) {
+  .detail-header {
+    grid-template-columns: 1fr;
+  }
+
+  .detail-availability {
+    grid-template-columns: 1fr;
+  }
   .header-content {
     flex-direction: column;
     gap: 12px;

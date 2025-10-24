@@ -70,6 +70,14 @@
           <span class="availability-value">{{ localQty }} units</span>
         </div>
       </div>
+
+      <button @click.stop="$emit('view-details', product)" class="btn-view-details">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <path d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" stroke-width="2"/>
+          <path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7Z" stroke-width="2"/>
+        </svg>
+        View Inventory & Pricing
+      </button>
     </div>
   </div>
 </template>
@@ -285,5 +293,33 @@ const handleImageError = (e) => {
 
 .out-of-stock {
   color: #ef4444;
+}
+
+.btn-view-details {
+  width: 100%;
+  margin-top: 16px;
+  padding: 12px;
+  background: #667eea;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.3s;
+}
+
+.btn-view-details:hover {
+  background: #5568d3;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.btn-view-details svg {
+  flex-shrink: 0;
 }
 </style>
