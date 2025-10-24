@@ -72,4 +72,15 @@ router.beforeEach((to, from, next) => {
   }
 });
 
+// Track page views with Fathom Analytics after each route change
+router.afterEach((to) => {
+  // Check if Fathom is loaded
+  if (window.fathom) {
+    // Track pageview with the hash path (e.g., /#/products becomes /products)
+    window.fathom.trackPageview({
+      url: window.location.origin + to.fullPath
+    });
+  }
+});
+
 export default router;
