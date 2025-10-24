@@ -4,7 +4,7 @@
       <div class="header-content">
         <h1>JDS Product Search</h1>
         <div class="user-info">
-          <router-link to="/lookup" class="btn btn-lookup">📦 Add Missing Product</router-link>
+          <router-link v-if="hasSearched && products.length === 0 && !loading" to="/sku-lookup" class="btn btn-lookup">📦 Add Missing Product</router-link>
           <router-link to="/admin" class="btn btn-admin">⚙ Admin</router-link>
           <span>{{ authStore.user?.username }}</span>
           <button @click="handleLogout" class="btn btn-logout">Logout</button>
@@ -46,22 +46,46 @@
 
       <div v-if="showFilters" class="filters-panel">
         <div class="filter-section">
-          <label for="color-filter" class="filter-label">Filter by Color:</label>
-          <select
-            id="color-filter"
-            v-model="selectedColor"
-            @change="handleColorChange"
-            class="color-filter-select"
-          >
-            <option value="">All Colors</option>
-            <option
-              v-for="colorOption in availableColors"
-              :key="colorOption.color"
-              :value="colorOption.color"
+          <label for="color-search" class="filter-label">Filter by Color:</label>
+          <div class="color-search-container">
+            <input
+              id="color-search"
+              v-model="colorSearchQuery"
+              @input="handleColorSearchInput"
+              @focus="showColorDropdown = true"
+              @blur="handleColorBlur"
+              type="text"
+              placeholder="Type to search colors (min 3 characters)..."
+              class="color-search-input"
+            />
+            <button
+              v-if="selectedColor"
+              @click="clearColorFilter"
+              class="clear-color-btn"
+              title="Clear color filter"
             >
-              {{ colorOption.color }} ({{ colorOption.count }})
-            </option>
-          </select>
+              ×
+            </button>
+          </div>
+
+          <!-- Color Dropdown -->
+          <div v-if="showColorDropdown && filteredColors.length > 0" class="color-dropdown">
+            <div
+              v-for="colorOption in filteredColors"
+              :key="colorOption.color"
+              @mousedown.prevent="selectColor(colorOption.color)"
+              class="color-option"
+            >
+              <div
+                class="color-swatch-small"
+                :style="{ background: getColorHex(colorOption.color) }"
+              ></div>
+              <span class="color-name">{{ colorOption.color }}</span>
+              <span class="color-count">({{ colorOption.count }})</span>
+            </div>
+          </div>
+
+          <!-- Selected Color Display -->
           <div v-if="selectedColor" class="color-swatch-display">
             <div
               class="color-swatch"
@@ -238,6 +262,8 @@ const authStore = useAuthStore();
 const searchQuery = ref('');
 const showFilters = ref(false);
 const selectedColor = ref('');
+const colorSearchQuery = ref('');
+const showColorDropdown = ref(false);
 const availableColors = ref([]);
 const products = ref([]);
 const pagination = ref({
@@ -256,6 +282,17 @@ const loadingLive = ref(false);
 const imageLoadError = ref(false);
 
 let searchTimeout = null;
+
+const filteredColors = computed(() => {
+  if (!colorSearchQuery.value || colorSearchQuery.value.length < 3) {
+    return [];
+  }
+
+  const query = colorSearchQuery.value.toLowerCase();
+  return availableColors.value.filter(c =>
+    c.color.toLowerCase().includes(query)
+  ).slice(0, 20); // Limit to 20 results
+});
 
 const performSearch = async (page = 1) => {
   loading.value = true;
@@ -306,7 +343,33 @@ const handlePageSizeChange = () => {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 };
 
-const handleColorChange = () => {
+const handleColorSearchInput = () => {
+  if (colorSearchQuery.value.length >= 3) {
+    showColorDropdown.value = true;
+  } else {
+    showColorDropdown.value = false;
+  }
+};
+
+const handleColorBlur = () => {
+  // Delay to allow click event to fire
+  setTimeout(() => {
+    showColorDropdown.value = false;
+  }, 200);
+};
+
+const selectColor = (color) => {
+  selectedColor.value = color;
+  colorSearchQuery.value = color;
+  showColorDropdown.value = false;
+  performSearch(1);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+};
+
+const clearColorFilter = () => {
+  selectedColor.value = '';
+  colorSearchQuery.value = '';
+  showColorDropdown.value = false;
   performSearch(1);
   window.scrollTo({ top: 0, behavior: 'smooth' });
 };
@@ -597,26 +660,104 @@ onMounted(() => {
   font-size: 14px;
 }
 
-.color-filter-select {
-  padding: 10px 14px;
+.color-search-container {
+  position: relative;
+  max-width: 400px;
+}
+
+.color-search-input {
+  width: 100%;
+  padding: 10px 40px 10px 14px;
   border: 2px solid #ddd;
   border-radius: 6px;
   font-size: 14px;
   color: #333;
   background: white;
-  cursor: pointer;
   transition: all 0.2s;
-  max-width: 300px;
 }
 
-.color-filter-select:hover {
+.color-search-input:hover {
   border-color: #667eea;
 }
 
-.color-filter-select:focus {
+.color-search-input:focus {
   outline: none;
   border-color: #667eea;
   box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.clear-color-btn {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: #e0e0e0;
+  border-radius: 50%;
+  font-size: 20px;
+  line-height: 1;
+  color: #666;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.clear-color-btn:hover {
+  background: #d0d0d0;
+  color: #333;
+}
+
+.color-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  max-width: 400px;
+  max-height: 300px;
+  overflow-y: auto;
+  background: white;
+  border: 2px solid #667eea;
+  border-radius: 6px;
+  margin-top: 4px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 100;
+}
+
+.color-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.color-option:hover {
+  background: #f5f5f5;
+}
+
+.color-swatch-small {
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  border: 1px solid #e0e0e0;
+  flex-shrink: 0;
+}
+
+.color-name {
+  flex: 1;
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+}
+
+.color-count {
+  font-size: 12px;
+  color: #999;
 }
 
 .color-swatch-display {
