@@ -70,18 +70,6 @@
             <span class="selected-color-name">{{ selectedColor }}</span>
           </div>
         </div>
-
-        <div class="filter-info">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-            <circle cx="12" cy="12" r="10" stroke-width="2"/>
-            <line x1="12" y1="16" x2="12" y2="12" stroke-width="2" stroke-linecap="round"/>
-            <line x1="12" y1="8" x2="12.01" y2="8" stroke-width="2" stroke-linecap="round"/>
-          </svg>
-          <div>
-            <strong>Note:</strong> Inventory levels are not available in bulk search.
-            Click "View Inventory & Pricing" on any product card to see live stock quantities.
-          </div>
-        </div>
       </div>
 
       <div v-if="loading" class="loading">
@@ -638,25 +626,6 @@ onMounted(() => {
   font-size: 14px;
   color: #666;
   font-weight: 500;
-}
-
-.filter-info {
-  display: flex;
-  gap: 12px;
-  align-items: flex-start;
-  color: #856404;
-  font-size: 13px;
-  line-height: 1.5;
-  background: #fff8e1;
-  padding: 12px;
-  border-radius: 6px;
-  border-left: 3px solid #ffc107;
-}
-
-.filter-info svg {
-  flex-shrink: 0;
-  margin-top: 2px;
-  color: #ffc107;
 }
 
 .loading,
