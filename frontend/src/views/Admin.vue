@@ -47,15 +47,15 @@
           {{ syncing || syncStatus?.isRunning ? 'Syncing...' : 'Sync from JDS Now' }}
         </button>
 
-        <div v-if="syncResult" class="result-message" :class="syncResult.success ? 'success' : 'error'">
+        <div v-if="syncResult && !syncing" class="result-message" :class="syncResult.success ? 'success' : 'error'">
           <h3>{{ syncResult.success ? '✓ Sync Complete' : '✗ Sync Failed' }}</h3>
           <p>{{ syncResult.message || syncResult.error }}</p>
-          <div v-if="syncResult.success" class="import-stats">
+          <div v-if="syncResult.success && syncResult.total" class="import-stats">
             <span>Total: {{ syncResult.total }}</span>
             <span>New: {{ syncResult.imported }}</span>
             <span>Updated: {{ syncResult.updated }}</span>
             <span v-if="syncResult.errors > 0">Errors: {{ syncResult.errors }}</span>
-            <span>Duration: {{ syncResult.duration }}</span>
+            <span v-if="syncResult.duration">Duration: {{ syncResult.duration }}</span>
           </div>
         </div>
       </div>
@@ -207,16 +207,18 @@ const handleSyncNow = async () => {
   try {
     const result = await adminAPI.syncNow();
 
-    if (result.isRunning || result.success) {
+    if (result.isRunning || (result.success && result.message && result.message.includes('background'))) {
+      // Sync started successfully in background
       syncing.value = true;
-      syncResult.value = {
-        success: true,
-        message: result.message || 'Sync started in background...'
-      };
 
+      // Don't set syncResult yet - wait for actual completion
       // Start polling for status updates
       startStatusPolling();
+    } else if (result.success === false && result.error) {
+      // Sync failed to start (e.g., already running)
+      syncResult.value = result;
     } else {
+      // Immediate result (shouldn't happen with background processing)
       syncResult.value = result;
     }
   } catch (error) {
