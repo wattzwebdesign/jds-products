@@ -474,6 +474,17 @@ onMounted(() => {
   background: rgba(255, 255, 255, 0.3);
 }
 
+.btn-login {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  text-decoration: none;
+}
+
+.btn-login:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
 .main-content {
   max-width: 1400px;
   margin: 0 auto;
