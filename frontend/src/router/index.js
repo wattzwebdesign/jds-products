@@ -77,8 +77,11 @@ router.afterEach((to) => {
   // Check if Fathom is loaded
   if (window.fathom) {
     // Track pageview with the hash path (e.g., /#/products becomes /products)
+    const trackingUrl = window.location.origin + to.fullPath;
+    console.log('Router tracking pageview:', trackingUrl);
+    console.log('Route fullPath:', to.fullPath);
     window.fathom.trackPageview({
-      url: window.location.origin + to.fullPath
+      url: trackingUrl
     });
   }
 });

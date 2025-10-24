@@ -521,10 +521,13 @@ const handleProductClick = async (product) => {
   if (window.fathom) {
     // Use nextTick to ensure URL has updated
     setTimeout(() => {
-      const fullUrl = window.location.href;
-      console.log('Tracking modal pageview:', fullUrl);
+      // Extract hash path including query params (e.g., /products?sku=ABC123)
+      const hashPath = window.location.hash.substring(1); // Remove the # symbol
+      const trackingUrl = window.location.origin + hashPath;
+      console.log('Tracking modal pageview:', trackingUrl);
+      console.log('Full window.location.href:', window.location.href);
       window.fathom.trackPageview({
-        url: fullUrl
+        url: trackingUrl
       });
     }, 50);
   }
@@ -603,10 +606,13 @@ const openModalFromUrl = async (sku) => {
       // Track modal view as pageview in Fathom
       if (window.fathom) {
         setTimeout(() => {
-          const fullUrl = window.location.href;
-          console.log('Tracking modal pageview from URL:', fullUrl);
+          // Extract hash path including query params (e.g., /products?sku=ABC123)
+          const hashPath = window.location.hash.substring(1); // Remove the # symbol
+          const trackingUrl = window.location.origin + hashPath;
+          console.log('Tracking modal pageview from URL:', trackingUrl);
+          console.log('Full window.location.href:', window.location.href);
           window.fathom.trackPageview({
-            url: fullUrl
+            url: trackingUrl
           });
         }, 50);
       }
