@@ -10,6 +10,128 @@ const prisma = new PrismaClient();
 router.use(authenticateToken);
 
 /**
+ * POST /api/products/search
+ * Body: { query, filters: { inStock, localStock, category }, page, limit }
+ * Search products in local database
+ */
+router.post('/search', async (req, res) => {
+  try {
+    const { query = '', filters = {}, page = 1, limit = 20 } = req.body;
+    const skip = (page - 1) * limit;
+
+    // Build where clause
+    const where = {};
+
+    // Search by name, description, or SKU
+    if (query && query.trim()) {
+      where.OR = [
+        { name: { contains: query, mode: 'insensitive' } },
+        { description: { contains: query, mode: 'insensitive' } },
+        { sku: { contains: query, mode: 'insensitive' } },
+      ];
+    }
+
+    // Apply filters
+    if (filters.inStock) {
+      where.availableQty = { gt: 0 };
+    }
+    if (filters.localStock) {
+      where.localQty = { gt: 0 };
+    }
+    if (filters.category) {
+      where.category = filters.category;
+    }
+
+    // Execute search
+    const [products, total] = await Promise.all([
+      prisma.product.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy: { name: 'asc' }
+      }),
+      prisma.product.count({ where })
+    ]);
+
+    res.json({
+      success: true,
+      products,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit)
+      }
+    });
+  } catch (error) {
+    console.error('Product search error:', error);
+    res.status(500).json({
+      error: 'Search failed',
+      message: error.message
+    });
+  }
+});
+
+/**
+ * GET /api/products/:sku/live
+ * Get live product data from JDS API for a specific SKU
+ */
+router.get('/:sku/live', async (req, res) => {
+  try {
+    const { sku } = req.params;
+
+    // Get user's JDS API token
+    const user = await prisma.user.findUnique({
+      where: { id: req.user.userId },
+      select: { jdsApiToken: true }
+    });
+
+    if (!user || !user.jdsApiToken) {
+      return res.status(400).json({
+        error: 'JDS API token not configured'
+      });
+    }
+
+    // Fetch live data from JDS API
+    const products = await jdsApiClient.getProductDetailsBySkus([sku], user.jdsApiToken);
+
+    if (products.length === 0) {
+      return res.status(404).json({ error: 'Product not found' });
+    }
+
+    const liveProduct = products[0];
+
+    // Update local database with fresh data
+    await prisma.product.upsert({
+      where: { sku },
+      update: {
+        availableQty: liveProduct.availability?.available || 0,
+        localQty: liveProduct.availability?.local || 0,
+        lastSynced: new Date()
+      },
+      create: {
+        sku,
+        name: liveProduct.name || 'Unknown Product',
+        description: liveProduct.description,
+        availableQty: liveProduct.availability?.available || 0,
+        localQty: liveProduct.availability?.local || 0,
+      }
+    });
+
+    res.json({
+      success: true,
+      product: liveProduct
+    });
+  } catch (error) {
+    console.error('Live product fetch error:', error);
+    res.status(500).json({
+      error: 'Failed to fetch live product data',
+      message: error.message
+    });
+  }
+});
+
+/**
  * POST /api/products/lookup
  * Body: { skus: string[] } or { skuInput: string }
  */

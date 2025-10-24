@@ -18,3 +18,24 @@ model User {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
+
+model Product {
+  id            String   @id @default(uuid())
+  sku           String   @unique
+  name          String   @db.Text
+  description   String?  @db.Text
+  category      String?
+  basePrice     Decimal? @db.Decimal(10, 2)
+  availableQty  Int      @default(0)
+  localQty      Int      @default(0)
+  imageUrl      String?  @db.Text
+  lastSynced    DateTime @default(now())
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([sku])
+  @@index([name])
+  @@index([availableQty])
+  @@index([localQty])
+  @@fulltext([name, description])
+}

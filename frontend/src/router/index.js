@@ -21,6 +21,18 @@ const routes = [
   {
     path: '/products',
     name: 'Products',
+    component: () => import('../views/ProductSearch.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/admin',
+    name: 'Admin',
+    component: () => import('../views/Admin.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/sku-lookup',
+    name: 'SKULookup',
     component: () => import('../views/ProductLookup.vue'),
     meta: { requiresAuth: true }
   }

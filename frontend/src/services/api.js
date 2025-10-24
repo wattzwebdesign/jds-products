@@ -77,6 +77,41 @@ export const productsAPI = {
   lookupBySKUs: async (skuInput) => {
     const response = await apiClient.post('/products/lookup', { skuInput });
     return response.data;
+  },
+
+  search: async (query, filters = {}, page = 1, limit = 20) => {
+    const response = await apiClient.post('/products/search', {
+      query,
+      filters,
+      page,
+      limit
+    });
+    return response.data;
+  },
+
+  getLiveProduct: async (sku) => {
+    const response = await apiClient.get(`/products/${sku}/live`);
+    return response.data;
+  }
+};
+
+// Admin API
+export const adminAPI = {
+  importProducts: async (file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const response = await apiClient.post('/admin/import-products', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    });
+    return response.data;
+  },
+
+  getImportStats: async () => {
+    const response = await apiClient.get('/admin/import-stats');
+    return response.data;
   }
 };
 
