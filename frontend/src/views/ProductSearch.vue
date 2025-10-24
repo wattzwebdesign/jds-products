@@ -621,13 +621,28 @@ onMounted(() => {
   align-items: center;
 }
 
+.btn {
+  padding: 10px 18px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .btn-filter {
   background: white;
   color: #0F3F92;
   border: 1px solid #0F3F92;
-  display: flex;
-  align-items: center;
-  gap: 8px;
 }
 
 .btn-filter:hover {
@@ -639,9 +654,6 @@ onMounted(() => {
   background: #f44336;
   color: white;
   border: 1px solid #f44336;
-  display: flex;
-  align-items: center;
-  gap: 8px;
 }
 
 .btn-clear-all:hover {
