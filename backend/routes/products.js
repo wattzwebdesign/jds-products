@@ -266,9 +266,7 @@ router.get('/filters/colors', async (req, res) => {
         color: true
       },
       orderBy: {
-        _count: {
-          color: 'desc'
-        }
+        color: 'asc'
       }
     });
 

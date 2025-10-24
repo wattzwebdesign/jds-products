@@ -4,6 +4,7 @@
       <div class="header-content">
         <h1>JDS Product Search</h1>
         <div class="user-info">
+          <router-link to="/lookup" class="btn btn-lookup">📦 Add Missing Product</router-link>
           <router-link to="/admin" class="btn btn-admin">⚙ Admin</router-link>
           <span>{{ authStore.user?.username }}</span>
           <button @click="handleLogout" class="btn btn-logout">Logout</button>
@@ -485,6 +486,17 @@ onMounted(() => {
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s;
+}
+
+.btn-lookup {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  text-decoration: none;
+}
+
+.btn-lookup:hover {
+  background: rgba(255, 255, 255, 0.3);
 }
 
 .btn-admin {
