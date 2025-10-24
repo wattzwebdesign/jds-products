@@ -22,12 +22,32 @@ router.post('/search', async (req, res) => {
 
     // Search by name, description, or SKU
     // MySQL is case-insensitive by default for LIKE queries
+    // Split query into individual words and match products containing ALL words
     if (query && query.trim()) {
-      where.OR = [
-        { name: { contains: query } },
-        { description: { contains: query } },
-        { sku: { contains: query } },
-      ];
+      const searchTerms = query.trim().split(/\s+/); // Split by whitespace
+
+      if (searchTerms.length === 1) {
+        // Single word search - check name, description, or SKU
+        where.OR = [
+          { name: { contains: searchTerms[0] } },
+          { description: { contains: searchTerms[0] } },
+          { sku: { contains: searchTerms[0] } },
+        ];
+      } else {
+        // Multi-word search - products must contain ALL words in name OR description
+        where.OR = [
+          {
+            AND: searchTerms.map(term => ({
+              name: { contains: term }
+            }))
+          },
+          {
+            AND: searchTerms.map(term => ({
+              description: { contains: term }
+            }))
+          }
+        ];
+      }
     }
 
     // Apply filters
