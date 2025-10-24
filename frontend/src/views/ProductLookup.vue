@@ -223,14 +223,18 @@ const handleViewProduct = async (product) => {
   const currentQuery = { ...route.query, sku: product.sku };
   await router.push({ query: currentQuery });
 
-  // Track modal view as pageview in Fathom (SPA hash routing requires full URL)
+  // Track modal view as pageview in Fathom
   if (window.fathom) {
     setTimeout(() => {
-      // For hash routing, pass the full href including the hash fragment
-      const fullUrl = window.location.href;
-      console.log('Tracking modal pageview (SPA hash):', fullUrl);
+      // Extract hash path and send as clean URL without # symbol
+      const hashPath = window.location.hash.substring(1) || '/';
+      const cleanUrl = window.location.origin + hashPath;
+
+      console.log('✅ Tracking modal pageview:', cleanUrl);
+      console.log('Hash was:', window.location.hash);
+
       window.fathom.trackPageview({
-        url: fullUrl
+        url: cleanUrl
       });
 
       // Also track as custom event for product analytics
@@ -281,14 +285,18 @@ const openModalFromUrl = async (sku) => {
       loadingLive.value = true;
       liveProduct.value = null;
 
-      // Track modal view as pageview in Fathom (SPA hash routing requires full URL)
+      // Track modal view as pageview in Fathom
       if (window.fathom) {
         setTimeout(() => {
-          // For hash routing, pass the full href including the hash fragment
-          const fullUrl = window.location.href;
-          console.log('Tracking modal pageview from URL (SPA hash):', fullUrl);
+          // Extract hash path and send as clean URL without # symbol
+          const hashPath = window.location.hash.substring(1) || '/';
+          const cleanUrl = window.location.origin + hashPath;
+
+          console.log('Tracking modal pageview from URL:', cleanUrl);
+          console.log('Hash was:', window.location.hash);
+
           window.fathom.trackPageview({
-            url: fullUrl
+            url: cleanUrl
           });
 
           // Also track as custom event for product analytics

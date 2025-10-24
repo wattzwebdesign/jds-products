@@ -77,13 +77,17 @@ router.afterEach(() => {
   // Wait for Fathom to load (it has defer attribute)
   const trackPageview = () => {
     if (window.fathom) {
-      // For SPAs with hash routing, pass the full URL including hash fragment
-      // See: https://usefathom.com/docs/script/script-advanced#single-page-applications
-      const fullUrl = window.location.href;
-      console.log('✅ Router tracking pageview (SPA hash):', fullUrl);
-      console.log('window.fathom exists:', !!window.fathom);
+      // Extract the hash path and send as a clean URL without the hash symbol
+      // e.g., #/products?sku=ABC123 becomes https://site.com/products?sku=ABC123
+      const hashPath = window.location.hash.substring(1) || '/';
+      const cleanUrl = window.location.origin + hashPath;
+
+      console.log('✅ Router tracking pageview:', cleanUrl);
+      console.log('Hash was:', window.location.hash);
+      console.log('Sending clean URL to Fathom:', cleanUrl);
+
       window.fathom.trackPageview({
-        url: fullUrl
+        url: cleanUrl
       });
     } else {
       console.warn('⚠️ Fathom not loaded yet, waiting...');
