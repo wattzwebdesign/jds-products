@@ -92,16 +92,17 @@ router.get('/import-stats', authenticateToken, async (req, res) => {
 /**
  * POST /api/admin/sync-now
  * Manually trigger product sync from JDS master data
+ * Returns immediately, sync runs in background
  */
-router.post('/sync-now', authenticateToken, async (req, res) => {
+router.post('/sync-now', authenticateToken, (req, res) => {
   try {
     console.log('[Admin] Manual sync triggered by user');
-    const result = await manualImport();
+    const result = manualImport(); // No await - returns immediately
 
-    if (result.success) {
+    if (result.success || result.isRunning) {
       res.json(result);
     } else {
-      res.status(result.isRunning ? 409 : 500).json(result);
+      res.status(409).json(result); // 409 Conflict if already running
     }
   } catch (error) {
     console.error('[Admin] Sync error:', error);

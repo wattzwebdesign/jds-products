@@ -21,7 +21,12 @@
             <span class="label">Last Sync:</span>
             <span class="value">{{ syncStatus.lastSyncTimeFormatted || 'Never' }}</span>
           </div>
-          <div class="sync-status-item" v-if="syncStatus.isRunning">
+          <div class="sync-status-item" v-if="syncStatus.isRunning && syncStatus.progress">
+            <span class="status-badge running">
+              {{ syncStatus.progress.message || 'Sync in Progress...' }}
+            </span>
+          </div>
+          <div class="sync-status-item" v-else-if="syncStatus.isRunning">
             <span class="status-badge running">Sync in Progress...</span>
           </div>
           <div class="sync-status-item" v-else-if="syncStatus.lastResult">
@@ -134,7 +139,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, onUnmounted } from 'vue';
 import { adminAPI } from '../services/api';
 
 const fileInput = ref(null);
@@ -148,6 +153,7 @@ const stats = ref(null);
 const syncing = ref(false);
 const syncResult = ref(null);
 const syncStatus = ref(null);
+let statusPollingInterval = null;
 
 const loadStats = async () => {
   try {
@@ -160,30 +166,65 @@ const loadStats = async () => {
 const loadSyncStatus = async () => {
   try {
     syncStatus.value = await adminAPI.getSyncStatus();
+
+    // Update syncing state based on server status
+    syncing.value = syncStatus.value?.isRunning || false;
+
+    // If sync just completed, show result
+    if (!syncStatus.value?.isRunning && syncStatus.value?.lastResult) {
+      if (!syncResult.value || syncResult.value.startTime !== syncStatus.value.lastResult.startTime) {
+        syncResult.value = syncStatus.value.lastResult;
+
+        // Reload stats if sync was successful
+        if (syncStatus.value.lastResult.success) {
+          await loadStats();
+        }
+
+        // Stop polling
+        if (statusPollingInterval) {
+          clearInterval(statusPollingInterval);
+          statusPollingInterval = null;
+        }
+      }
+    }
   } catch (error) {
     console.error('Failed to load sync status:', error);
   }
 };
 
+const startStatusPolling = () => {
+  // Poll every 2 seconds while sync is running
+  if (!statusPollingInterval) {
+    statusPollingInterval = setInterval(() => {
+      loadSyncStatus();
+    }, 2000);
+  }
+};
+
 const handleSyncNow = async () => {
-  syncing.value = true;
   syncResult.value = null;
 
   try {
     const result = await adminAPI.syncNow();
-    syncResult.value = result;
 
-    if (result.success) {
-      // Reload stats and sync status after successful sync
-      await Promise.all([loadStats(), loadSyncStatus()]);
+    if (result.isRunning || result.success) {
+      syncing.value = true;
+      syncResult.value = {
+        success: true,
+        message: result.message || 'Sync started in background...'
+      };
+
+      // Start polling for status updates
+      startStatusPolling();
+    } else {
+      syncResult.value = result;
     }
   } catch (error) {
+    syncing.value = false;
     syncResult.value = {
       success: false,
       error: error.response?.data?.message || error.response?.data?.error || 'Sync failed. Please try again.'
     };
-  } finally {
-    syncing.value = false;
   }
 };
 
@@ -247,6 +288,14 @@ const handleImport = async () => {
 onMounted(() => {
   loadStats();
   loadSyncStatus();
+});
+
+onUnmounted(() => {
+  // Clear polling interval when component unmounts
+  if (statusPollingInterval) {
+    clearInterval(statusPollingInterval);
+    statusPollingInterval = null;
+  }
 });
 </script>
 
