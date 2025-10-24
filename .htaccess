@@ -1,13 +1,14 @@
 # Enable Rewrite Engine
 RewriteEngine On
 
-# Proxy API requests to backend Node.js server on port 3000
+# Proxy API requests through PHP proxy to Node.js backend
 RewriteCond %{REQUEST_URI} ^/api/
-RewriteRule ^api/(.*)$ http://localhost:3000/api/$1 [P,L]
+RewriteRule ^api/(.*)$ /api.php/$1 [L,QSA]
 
 # Handle Vue.js routing - redirect all requests to index.html
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_URI} !^/api\.php
 RewriteRule ^(.*)$ /index.html [L]
 
 # Security Headers
