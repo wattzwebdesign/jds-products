@@ -348,8 +348,9 @@ onUnmounted(() => {
 }
 
 .sync-section {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #667eea;
   color: white;
+  border-left: 4px solid #5568d3;
 }
 
 .sync-section h2 {
@@ -357,14 +358,15 @@ onUnmounted(() => {
 }
 
 .sync-section .instructions {
-  color: rgba(255, 255, 255, 0.9);
+  color: rgba(255, 255, 255, 0.95);
 }
 
 .sync-info {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.15);
   padding: 20px;
   border-radius: 8px;
   margin-bottom: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .sync-status-item {
@@ -407,11 +409,11 @@ onUnmounted(() => {
 }
 
 .sync-progress-container {
-  background: rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.2);
   padding: 30px;
   border-radius: 12px;
   margin-bottom: 20px;
-  border: 2px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
 .progress-header {
@@ -456,9 +458,10 @@ onUnmounted(() => {
 
 .progress-bar-fill {
   height: 100%;
-  background: linear-gradient(90deg, #fff, rgba(255, 255, 255, 0.8));
+  background: white;
   animation: progress-indeterminate 1.5s ease-in-out infinite;
   width: 30%;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
 }
 
 @keyframes progress-indeterminate {
