@@ -508,25 +508,30 @@ const handleProductClick = async (product) => {
     return;
   }
 
-  // Update URL with SKU parameter
-  const currentQuery = { ...route.query, sku: product.sku };
-  router.push({ query: currentQuery });
-
   selectedProduct.value = product;
   loadingLive.value = true;
   liveProduct.value = null;
   imageLoadError.value = false;
 
+  // Update URL with SKU parameter
+  const currentQuery = { ...route.query, sku: product.sku };
+  await router.push({ query: currentQuery });
+
+  // Track modal view as pageview in Fathom AFTER URL update
+  if (window.fathom) {
+    // Use nextTick to ensure URL has updated
+    setTimeout(() => {
+      const fullUrl = window.location.href;
+      console.log('Tracking modal pageview:', fullUrl);
+      window.fathom.trackPageview({
+        url: fullUrl
+      });
+    }, 50);
+  }
+
   try {
     const result = await productsAPI.getLiveProduct(product.sku);
     liveProduct.value = result.product;
-
-    // Track modal view as pageview in Fathom
-    if (window.fathom) {
-      window.fathom.trackPageview({
-        url: window.location.origin + route.fullPath
-      });
-    }
 
     // Debug logging
     console.log('Live product data:', result.product);
@@ -595,16 +600,20 @@ const openModalFromUrl = async (sku) => {
       liveProduct.value = null;
       imageLoadError.value = false;
 
+      // Track modal view as pageview in Fathom
+      if (window.fathom) {
+        setTimeout(() => {
+          const fullUrl = window.location.href;
+          console.log('Tracking modal pageview from URL:', fullUrl);
+          window.fathom.trackPageview({
+            url: fullUrl
+          });
+        }, 50);
+      }
+
       try {
         const result = await productsAPI.getLiveProduct(sku);
         liveProduct.value = result.product;
-
-        // Track modal view as pageview in Fathom
-        if (window.fathom) {
-          window.fathom.trackPageview({
-            url: window.location.origin + route.fullPath
-          });
-        }
       } catch (error) {
         console.error('Failed to fetch live product:', error);
         liveProduct.value = product;
