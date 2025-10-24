@@ -4,10 +4,7 @@
       <div class="header-content">
         <h1>JDS Product Search</h1>
         <div class="user-info">
-          <router-link v-if="hasSearched && products.length === 0 && !loading" to="/sku-lookup" class="btn btn-lookup">📦 Add Missing Product</router-link>
-          <router-link to="/admin" class="btn btn-admin">⚙ Admin</router-link>
-          <span>{{ authStore.user?.username }}</span>
-          <button @click="handleLogout" class="btn btn-logout">Logout</button>
+          <router-link to="/login" class="btn btn-login">Login</router-link>
         </div>
       </div>
     </header>
@@ -119,7 +116,7 @@
             v-for="product in products"
             :key="product.sku"
             :product="product"
-            @view-details="handleProductClick(product)"
+            :hide-view-button="true"
           />
         </div>
 
@@ -173,92 +170,17 @@
       </div>
     </main>
 
-    <!-- Product Detail Modal -->
-    <div v-if="selectedProduct" class="modal-overlay" @click="closeModal">
-      <div class="modal-content" @click.stop>
-        <button @click="closeModal" class="modal-close">×</button>
-
-        <div v-if="loadingLive" class="loading-live">
-          <div class="spinner"></div>
-          <p>Fetching live inventory & pricing...</p>
-        </div>
-
-        <div v-else-if="liveProduct" class="live-product-details">
-          <div class="detail-header">
-            <div class="detail-image">
-              <img
-                v-if="liveProduct.imageUrl && !imageLoadError"
-                :src="liveProduct.imageUrl"
-                :alt="liveProduct.name"
-                @error="handleImageLoadError"
-                @load="handleImageLoadSuccess"
-              />
-              <div v-else class="no-image">
-                <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2" stroke-width="2"/>
-                  <circle cx="8.5" cy="8.5" r="1.5" stroke-width="2"/>
-                  <polyline points="21 15 16 10 5 21" stroke-width="2"/>
-                </svg>
-                <span>{{ imageLoadError ? 'Image Failed to Load' : 'No Image' }}</span>
-              </div>
-            </div>
-            <div class="detail-info">
-              <h2>{{ liveProduct.name }}</h2>
-              <span class="detail-sku">SKU: {{ liveProduct.sku }}</span>
-              <p class="detail-description">{{ liveProduct.description || 'No description available' }}</p>
-            </div>
-          </div>
-
-          <div class="detail-pricing">
-            <h3>Live Pricing & Inventory</h3>
-            <div class="pricing-table">
-              <div class="pricing-row" v-if="liveProduct.basePrice || liveProduct.lessThanCasePrice">
-                <span class="pricing-label">Less than case:</span>
-                <span class="pricing-value">${{ formatPrice(liveProduct.basePrice || liveProduct.lessThanCasePrice) }}</span>
-              </div>
-              <div class="pricing-row" v-if="liveProduct.oneCase">
-                <span class="pricing-label">1 case ({{ liveProduct.caseQuantity || '-' }} units):</span>
-                <span class="pricing-value">${{ formatPrice(liveProduct.oneCase) }}</span>
-              </div>
-              <div class="pricing-row" v-if="liveProduct.fiveCases">
-                <span class="pricing-label">5+ cases:</span>
-                <span class="pricing-value">${{ formatPrice(liveProduct.fiveCases) }}</span>
-              </div>
-              <div class="pricing-row" v-if="liveProduct.tenCases">
-                <span class="pricing-label">10+ cases:</span>
-                <span class="pricing-value">${{ formatPrice(liveProduct.tenCases) }}</span>
-              </div>
-            </div>
-          </div>
-
-          <div class="detail-availability">
-            <div class="availability-card" :class="getAvailableQty(liveProduct) > 0 ? 'in-stock' : 'out-of-stock'">
-              <div class="availability-label">Available Quantity</div>
-              <div class="availability-number">{{ getAvailableQty(liveProduct) }}</div>
-              <div class="availability-status">{{ getAvailableQty(liveProduct) > 0 ? 'In Stock' : 'Out of Stock' }}</div>
-            </div>
-            <div class="availability-card">
-              <div class="availability-label">Local Quantity</div>
-              <div class="availability-number">{{ getLocalQty(liveProduct) }}</div>
-              <div class="availability-status">{{ getLocalQty(liveProduct) > 0 ? 'Available Locally' : 'Not in Local Stock' }}</div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
-import { useAuthStore } from '../stores/auth';
 import { productsAPI } from '../services/api';
 import ProductCard from '../components/ProductCard.vue';
 
 const router = useRouter();
 const route = useRoute();
-const authStore = useAuthStore();
 
 const searchQuery = ref('');
 const showFilters = ref(false);
@@ -276,11 +198,6 @@ const pagination = ref({
 const loading = ref(false);
 const hasSearched = ref(false);
 const errorMessage = ref('');
-
-const selectedProduct = ref(null);
-const liveProduct = ref(null);
-const loadingLive = ref(false);
-const imageLoadError = ref(false);
 
 let searchTimeout = null;
 
@@ -451,63 +368,7 @@ const getColorHex = (colorName) => {
   return '#CCCCCC';
 };
 
-const handleProductClick = async (product) => {
-  selectedProduct.value = product;
-  loadingLive.value = true;
-  liveProduct.value = null;
-  imageLoadError.value = false;
-
-  try {
-    const result = await productsAPI.getLiveProduct(product.sku);
-    liveProduct.value = result.product;
-
-    // Debug logging
-    console.log('Live product data:', result.product);
-    console.log('Image URL:', result.product.imageUrl);
-  } catch (error) {
-    console.error('Failed to fetch live product:', error);
-    liveProduct.value = product; // Fallback to cached data
-    console.log('Fallback product data:', product);
-    console.log('Fallback image URL:', product.imageUrl);
-  } finally {
-    loadingLive.value = false;
-  }
-};
-
-const closeModal = () => {
-  selectedProduct.value = null;
-  liveProduct.value = null;
-  imageLoadError.value = false;
-};
-
-const handleImageLoadError = (e) => {
-  console.error('Image failed to load:', liveProduct.value?.imageUrl);
-  console.error('Error event:', e);
-  imageLoadError.value = true;
-};
-
-const handleImageLoadSuccess = () => {
-  console.log('Image loaded successfully:', liveProduct.value?.imageUrl);
-  imageLoadError.value = false;
-};
-
-const handleLogout = () => {
-  authStore.logout();
-  router.push('/login');
-};
-
-const formatPrice = (price) => {
-  if (price === null || price === undefined) return '-';
-  return Number(price).toFixed(2);
-};
-
-const getAvailableQty = (product) => {
-  return product.availableQty ?? product.availableQuantity ?? 0;
-};
-
-const getLocalQty = (product) => {
-  return product.localQty ?? product.localQuantity ?? 0;
-};
+// Public view - no product details modal needed
 
 onMounted(() => {
   // Load available colors for filter

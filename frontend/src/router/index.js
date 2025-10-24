@@ -4,7 +4,12 @@ import { useAuthStore } from '../stores/auth';
 const routes = [
   {
     path: '/',
-    redirect: '/products'
+    redirect: '/search'
+  },
+  {
+    path: '/search',
+    name: 'PublicSearch',
+    component: () => import('../views/PublicProductSearch.vue')
   },
   {
     path: '/login',
