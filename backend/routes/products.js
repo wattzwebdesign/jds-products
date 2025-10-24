@@ -23,11 +23,12 @@ router.post('/search', async (req, res) => {
     const where = {};
 
     // Search by name, description, or SKU
+    // MySQL is case-insensitive by default for LIKE queries
     if (query && query.trim()) {
       where.OR = [
-        { name: { contains: query, mode: 'insensitive' } },
-        { description: { contains: query, mode: 'insensitive' } },
-        { sku: { contains: query, mode: 'insensitive' } },
+        { name: { contains: query } },
+        { description: { contains: query } },
+        { sku: { contains: query } },
       ];
     }
 
