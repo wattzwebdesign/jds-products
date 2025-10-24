@@ -4,10 +4,16 @@
       <div class="header-content">
         <h1>JDS Product Search</h1>
         <div class="user-info">
-          <router-link v-if="hasSearched && products.length === 0 && !loading" to="/sku-lookup" class="btn btn-lookup">📦 Add Missing Product</router-link>
-          <router-link to="/admin" class="btn btn-admin">⚙ Admin</router-link>
-          <span>{{ authStore.user?.username }}</span>
-          <button @click="handleLogout" class="btn btn-logout">Logout</button>
+          <!-- Show when NOT authenticated -->
+          <router-link v-if="!authStore.isAuthenticated" to="/login" class="btn btn-login">Login</router-link>
+
+          <!-- Show when authenticated -->
+          <template v-else>
+            <router-link v-if="hasSearched && products.length === 0 && !loading" to="/sku-lookup" class="btn btn-lookup">📦 Add Missing Product</router-link>
+            <router-link to="/admin" class="btn btn-admin">⚙ Admin</router-link>
+            <span>{{ authStore.user?.username }}</span>
+            <button @click="handleLogout" class="btn btn-logout">Logout</button>
+          </template>
         </div>
       </div>
     </header>
@@ -119,6 +125,7 @@
             v-for="product in products"
             :key="product.sku"
             :product="product"
+            :hide-view-button="!authStore.isAuthenticated"
             @view-details="handleProductClick(product)"
           />
         </div>
@@ -452,6 +459,12 @@ const getColorHex = (colorName) => {
 };
 
 const handleProductClick = async (product) => {
+  // Require authentication for live inventory/pricing
+  if (!authStore.isAuthenticated) {
+    router.push('/login');
+    return;
+  }
+
   selectedProduct.value = product;
   loadingLive.value = true;
   liveProduct.value = null;

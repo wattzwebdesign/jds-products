@@ -4,7 +4,7 @@ import { useAuthStore } from '../stores/auth';
 const routes = [
   {
     path: '/',
-    redirect: '/search'
+    redirect: '/products'
   },
   {
     path: '/search',
@@ -26,8 +26,8 @@ const routes = [
   {
     path: '/products',
     name: 'Products',
-    component: () => import('../views/ProductSearch.vue'),
-    meta: { requiresAuth: true }
+    component: () => import('../views/ProductSearch.vue')
+    // No authentication required - public route
   },
   {
     path: '/admin',
