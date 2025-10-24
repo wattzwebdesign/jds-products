@@ -36,6 +36,25 @@
         </button>
       </div>
 
+      <div v-if="hasProductDetails" class="product-specs">
+        <div v-if="product.caseQty" class="spec-item">
+          <span class="spec-label">Case Qty:</span>
+          <span class="spec-value">{{ product.caseQty }}</span>
+        </div>
+        <div v-if="product.color" class="spec-item">
+          <span class="spec-label">Color:</span>
+          <span class="spec-value">{{ product.color }}</span>
+        </div>
+        <div v-if="hasDimensions" class="spec-item dimensions">
+          <span class="spec-label">Dimensions:</span>
+          <span class="spec-value">{{ formatDimensions }}</span>
+        </div>
+        <div v-if="product.lastPriceChange" class="spec-item price-change">
+          <span class="spec-label">Last Price Change:</span>
+          <span class="spec-value">{{ product.lastPriceChange }}</span>
+        </div>
+      </div>
+
       <button @click.stop="$emit('view-details', product)" class="btn-view-details">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
           <path d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" stroke-width="2"/>
@@ -63,6 +82,22 @@ const imageError = ref(false);
 const hasLongDescription = computed(() => {
   const desc = props.product.description || '';
   return desc.length > 150; // Show "Read More" if description is longer than 150 chars
+});
+
+const hasProductDetails = computed(() => {
+  return props.product.caseQty || props.product.color || hasDimensions.value || props.product.lastPriceChange;
+});
+
+const hasDimensions = computed(() => {
+  return props.product.length || props.product.height || props.product.width;
+});
+
+const formatDimensions = computed(() => {
+  const dims = [];
+  if (props.product.length) dims.push(`L: ${Number(props.product.length).toFixed(2)}"`);
+  if (props.product.width) dims.push(`W: ${Number(props.product.width).toFixed(2)}"`);
+  if (props.product.height) dims.push(`H: ${Number(props.product.height).toFixed(2)}"`);
+  return dims.join(' × ');
 });
 
 // Handle different field name variations from database
@@ -195,6 +230,49 @@ const handleImageError = (e) => {
 .read-more-btn:hover {
   color: #5568d3;
   text-decoration: underline;
+}
+
+.product-specs {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 12px;
+  padding: 12px;
+  background: #f8f9fa;
+  border-radius: 6px;
+  border-left: 3px solid #667eea;
+}
+
+.spec-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+}
+
+.spec-label {
+  color: #666;
+  font-weight: 500;
+}
+
+.spec-value {
+  color: #333;
+  font-weight: 600;
+}
+
+.spec-item.dimensions .spec-value {
+  font-family: 'Courier New', monospace;
+  font-size: 12px;
+}
+
+.spec-item.price-change {
+  border-top: 1px solid #e0e0e0;
+  padding-top: 8px;
+  margin-top: 4px;
+}
+
+.spec-item.price-change .spec-value {
+  color: #667eea;
 }
 
 .btn-view-details {

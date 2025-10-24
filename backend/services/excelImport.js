@@ -33,6 +33,12 @@ export async function importProductsFromExcel(filePath) {
       const desc2 = row['DESCRIPTION 2'] || '';
       const combinedName = shortDesc || (desc1 + (desc2 ? ' ' + desc2 : '')).trim();
 
+      // Parse last price change (only if not "No Price Change")
+      const lastPriceChangeRaw = row['LAST PRICE CHANGE DATE'];
+      const lastPriceChange = (lastPriceChangeRaw && lastPriceChangeRaw !== 'No Price Change')
+        ? String(lastPriceChangeRaw)
+        : null;
+
       return {
         sku: String(row['ITEM'] || '').trim(),
         name: combinedName || 'Unknown Product',
@@ -42,6 +48,14 @@ export async function importProductsFromExcel(filePath) {
         availableQty: 0, // Will be updated from JDS API
         localQty: 0, // Will be updated from JDS API
         imageUrl: row['LARGE IMAGE'] || row['SMALL IMAGE'] || null,
+
+        // Additional product details
+        caseQty: parseInt(row['CASE QTY.']) || null,
+        color: row['COLOR'] || null,
+        length: parseFloat(row['LENGTH']) || null,
+        height: parseFloat(row['HEIGHT']) || null,
+        width: parseFloat(row['WIDTH']) || null,
+        lastPriceChange: lastPriceChange,
       };
     }).filter(product => product.sku); // Only include products with valid SKU
 
@@ -68,6 +82,12 @@ export async function importProductsFromExcel(filePath) {
               availableQty: product.availableQty,
               localQty: product.localQty,
               imageUrl: product.imageUrl,
+              caseQty: product.caseQty,
+              color: product.color,
+              length: product.length,
+              height: product.height,
+              width: product.width,
+              lastPriceChange: product.lastPriceChange,
               lastSynced: new Date(),
             },
             create: product,

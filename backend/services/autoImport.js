@@ -112,6 +112,12 @@ async function parseCSV(csvData) {
         const sku = String(rawSku || '').trim();
 
         if (sku) {
+          // Parse last price change (only if not "No Price Change")
+          const lastPriceChangeRaw = row['LAST PRICE CHANGE DATE'];
+          const lastPriceChange = (lastPriceChangeRaw && lastPriceChangeRaw !== 'No Price Change')
+            ? String(lastPriceChangeRaw)
+            : null;
+
           products.push({
             sku,
             name: combinedName || 'Unknown Product',
@@ -121,6 +127,14 @@ async function parseCSV(csvData) {
             availableQty: 0, // Will be updated from JDS API
             localQty: 0, // Will be updated from JDS API
             imageUrl: row['LARGE IMAGE'] || row['SMALL IMAGE'] || null,
+
+            // Additional product details
+            caseQty: parseInt(row['CASE QTY.']) || null,
+            color: row['COLOR'] || null,
+            length: parseFloat(row['LENGTH']) || null,
+            height: parseFloat(row['HEIGHT']) || null,
+            width: parseFloat(row['WIDTH']) || null,
+            lastPriceChange: lastPriceChange,
           });
         } else {
           skippedRows++;
@@ -186,6 +200,12 @@ async function importProducts(products) {
             category: product.category,
             basePrice: product.basePrice,
             imageUrl: product.imageUrl,
+            caseQty: product.caseQty,
+            color: product.color,
+            length: product.length,
+            height: product.height,
+            width: product.width,
+            lastPriceChange: product.lastPriceChange,
             lastSynced: new Date(),
           },
           create: product,

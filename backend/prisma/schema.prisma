@@ -21,18 +21,27 @@ model User {
 }
 
 model Product {
-  id            String   @id @default(uuid())
-  sku           String   @unique
-  name          String   @db.VarChar(500)
-  description   String?  @db.Text
-  category      String?  @db.VarChar(255)
-  basePrice     Decimal? @db.Decimal(10, 2)
-  availableQty  Int      @default(0)
-  localQty      Int      @default(0)
-  imageUrl      String?  @db.Text
-  lastSynced    DateTime @default(now())
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id              String   @id @default(uuid())
+  sku             String   @unique
+  name            String   @db.VarChar(500)
+  description     String?  @db.Text
+  category        String?  @db.VarChar(255)
+  basePrice       Decimal? @db.Decimal(10, 2)
+  availableQty    Int      @default(0)
+  localQty        Int      @default(0)
+  imageUrl        String?  @db.Text
+
+  // Additional product details
+  caseQty         Int?
+  color           String?  @db.VarChar(100)
+  length          Decimal? @db.Decimal(10, 2)
+  height          Decimal? @db.Decimal(10, 2)
+  width           Decimal? @db.Decimal(10, 2)
+  lastPriceChange String?  @db.VarChar(100)
+
+  lastSynced      DateTime @default(now())
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
   @@index([sku])
   @@index([name(length: 191)])
