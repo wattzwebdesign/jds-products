@@ -250,7 +250,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { useAuthStore } from '../stores/auth';
 import { productsAPI } from '../services/api';
@@ -607,6 +607,17 @@ onMounted(() => {
 }
 
 .btn-logout:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.btn-login {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  text-decoration: none;
+}
+
+.btn-login:hover {
   background: rgba(255, 255, 255, 0.3);
 }
 
