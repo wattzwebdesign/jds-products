@@ -3,7 +3,15 @@
     <header class="header">
       <div class="header-content">
         <h1>JDS Product Lookup</h1>
+
+        <!-- Navigation Links -->
+        <nav class="nav-links">
+          <router-link to="/products" class="nav-link">All Products</router-link>
+          <router-link to="/sku-lookup" class="nav-link">Bulk SKU Search</router-link>
+        </nav>
+
         <div class="user-info">
+          <router-link to="/admin" class="btn btn-admin">⚙ Admin</router-link>
           <span>{{ authStore.user?.username }}</span>
           <button @click="handleLogout" class="btn btn-logout">Logout</button>
         </div>
@@ -82,7 +90,10 @@
             <div v-else class="database-badge in-db">
               In Database
             </div>
-            <ProductCard :product="product" />
+            <ProductCard
+              :product="product"
+              @view-details="handleViewProduct(product)"
+            />
           </div>
         </div>
       </div>
@@ -164,6 +175,14 @@ const handleSaveMissingProducts = async () => {
   }
 };
 
+const handleViewProduct = (product) => {
+  // Navigate to products page with the SKU in the search
+  router.push({
+    path: '/products',
+    query: { q: product.sku }
+  });
+};
+
 const handleLogout = () => {
   authStore.logout();
   router.push('/login');
@@ -189,11 +208,40 @@ const handleLogout = () => {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 30px;
 }
 
 .header h1 {
   margin: 0;
   font-size: 24px;
+  white-space: nowrap;
+}
+
+.nav-links {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+  flex: 1;
+}
+
+.nav-link {
+  color: white;
+  text-decoration: none;
+  font-size: 15px;
+  font-weight: 500;
+  padding: 8px 16px;
+  border-radius: 6px;
+  transition: background 0.2s;
+  white-space: nowrap;
+}
+
+.nav-link:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.nav-link.router-link-active {
+  background: rgba(255, 255, 255, 0.2);
+  font-weight: 600;
 }
 
 .user-info {
@@ -204,6 +252,17 @@ const handleLogout = () => {
 
 .user-info span {
   font-size: 14px;
+}
+
+.btn-admin {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  text-decoration: none;
+}
+
+.btn-admin:hover {
+  background: rgba(255, 255, 255, 0.3);
 }
 
 .btn-logout {
