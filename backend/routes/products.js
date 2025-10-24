@@ -18,7 +18,9 @@ router.post('/search', async (req, res) => {
     const skip = (page - 1) * limit;
 
     // Build where clause
-    const where = {};
+    const where = {
+      AND: [] // Use AND array to combine all conditions
+    };
 
     // Search by name, description, or SKU
     // MySQL is case-insensitive by default for LIKE queries
@@ -28,51 +30,58 @@ router.post('/search', async (req, res) => {
 
       if (searchTerms.length === 1) {
         // Single word search - check name, description, or SKU
-        where.OR = [
-          { name: { contains: searchTerms[0] } },
-          { description: { contains: searchTerms[0] } },
-          { sku: { contains: searchTerms[0] } },
-        ];
+        where.AND.push({
+          OR: [
+            { name: { contains: searchTerms[0] } },
+            { description: { contains: searchTerms[0] } },
+            { sku: { contains: searchTerms[0] } },
+          ]
+        });
       } else {
         // Multi-word search - products must contain ALL words in name OR description
-        where.OR = [
-          {
-            AND: searchTerms.map(term => ({
-              name: { contains: term }
-            }))
-          },
-          {
-            AND: searchTerms.map(term => ({
-              description: { contains: term }
-            }))
-          }
-        ];
+        where.AND.push({
+          OR: [
+            {
+              AND: searchTerms.map(term => ({
+                name: { contains: term }
+              }))
+            },
+            {
+              AND: searchTerms.map(term => ({
+                description: { contains: term }
+              }))
+            }
+          ]
+        });
       }
     }
 
     // Apply filters
     if (filters.inStock) {
-      where.availableQty = { gt: 0 };
+      where.AND.push({ availableQty: { gt: 0 } });
     }
     if (filters.localStock) {
-      where.localQty = { gt: 0 };
+      where.AND.push({ localQty: { gt: 0 } });
     }
     if (filters.category) {
-      where.category = filters.category;
+      where.AND.push({ category: filters.category });
     }
     if (filters.color) {
-      where.color = filters.color;
+      where.AND.push({ color: filters.color });
     }
+
+    // If no conditions were added, remove the AND wrapper
+    const finalWhere = where.AND.length > 0 ? where : {};
 
     // Execute search
     const [products, total] = await Promise.all([
       prisma.product.findMany({
-        where,
+        where: finalWhere,
         skip,
         take: limit,
         orderBy: { name: 'asc' }
       }),
-      prisma.product.count({ where })
+      prisma.product.count({ where: finalWhere })
     ]);
 
     res.json({
