@@ -85,26 +85,38 @@
           />
         </div>
 
-        <div v-if="pagination.totalPages > 1" class="pagination">
-          <button
-            @click="goToPage(pagination.page - 1)"
-            :disabled="pagination.page === 1"
-            class="btn btn-page"
-          >
-            ← Previous
-          </button>
+        <div v-if="pagination.total > 0" class="pagination">
+          <div class="pagination-controls">
+            <button
+              @click="goToPage(pagination.page - 1)"
+              :disabled="pagination.page === 1"
+              class="btn btn-page"
+            >
+              ← Previous
+            </button>
 
-          <span class="page-info">
-            Page {{ pagination.page }} of {{ pagination.totalPages }}
-          </span>
+            <span class="page-info">
+              Page {{ pagination.page }} of {{ pagination.totalPages }}
+            </span>
 
-          <button
-            @click="goToPage(pagination.page + 1)"
-            :disabled="pagination.page >= pagination.totalPages"
-            class="btn btn-page"
-          >
-            Next →
-          </button>
+            <button
+              @click="goToPage(pagination.page + 1)"
+              :disabled="pagination.page >= pagination.totalPages"
+              class="btn btn-page"
+            >
+              Next →
+            </button>
+          </div>
+
+          <div class="items-per-page">
+            <label for="page-size">Items per page:</label>
+            <select id="page-size" v-model="pagination.limit" @change="handlePageSizeChange">
+              <option :value="10">10</option>
+              <option :value="20">20</option>
+              <option :value="50">50</option>
+              <option :value="100">100</option>
+            </select>
+          </div>
         </div>
       </div>
 
@@ -281,6 +293,12 @@ const goToPage = (page) => {
     performSearch(page);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
+};
+
+const handlePageSizeChange = () => {
+  // Reset to page 1 when changing page size
+  performSearch(1);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 };
 
 const handleProductClick = async (product) => {
@@ -565,10 +583,50 @@ onMounted(() => {
 
 .pagination {
   display: flex;
-  justify-content: center;
+  flex-direction: column;
   align-items: center;
   gap: 16px;
   margin-top: 32px;
+}
+
+.pagination-controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+}
+
+.items-per-page {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: #666;
+}
+
+.items-per-page label {
+  font-weight: 500;
+}
+
+.items-per-page select {
+  padding: 6px 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  background: white;
+  color: #333;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.items-per-page select:hover {
+  border-color: #667eea;
+}
+
+.items-per-page select:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
 
 .btn-page {
