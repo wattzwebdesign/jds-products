@@ -16,35 +16,41 @@
           Scheduled to run automatically every Sunday at midnight.
         </p>
 
-        <div class="sync-info" v-if="syncStatus">
+        <!-- Sync Status - Only show when NOT running -->
+        <div class="sync-info" v-if="syncStatus && !syncStatus.isRunning">
           <div class="sync-status-item">
             <span class="label">Last Sync:</span>
             <span class="value">{{ syncStatus.lastSyncTimeFormatted || 'Never' }}</span>
           </div>
-          <div class="sync-status-item" v-if="syncStatus.isRunning && syncStatus.progress">
-            <span class="status-badge running">
-              {{ syncStatus.progress.message || 'Sync in Progress...' }}
-            </span>
-          </div>
-          <div class="sync-status-item" v-else-if="syncStatus.isRunning">
-            <span class="status-badge running">Sync in Progress...</span>
-          </div>
-          <div class="sync-status-item" v-else-if="syncStatus.lastResult">
+          <div class="sync-status-item" v-if="syncStatus.lastResult">
             <span class="status-badge" :class="syncStatus.lastResult.success ? 'success' : 'error'">
               {{ syncStatus.lastResult.success ? 'Last sync successful' : 'Last sync failed' }}
             </span>
           </div>
         </div>
 
+        <!-- Active Sync Progress -->
+        <div v-if="syncStatus?.isRunning" class="sync-progress-container">
+          <div class="progress-header">
+            <div class="spinner-large"></div>
+            <div class="progress-text">
+              <h3>Syncing Products...</h3>
+              <p>{{ syncStatus.progress?.message || 'Starting sync...' }}</p>
+            </div>
+          </div>
+          <div class="progress-bar">
+            <div class="progress-bar-fill"></div>
+          </div>
+          <p class="progress-note">This may take 5-10 minutes for large catalogs. You can leave this page.</p>
+        </div>
+
         <button
           @click="handleSyncNow"
           class="btn btn-sync"
           :disabled="syncing || syncStatus?.isRunning"
+          v-if="!syncStatus?.isRunning"
         >
-          <svg v-if="syncing || syncStatus?.isRunning" class="spinner-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-            <circle cx="12" cy="12" r="10" stroke-width="2"/>
-          </svg>
-          {{ syncing || syncStatus?.isRunning ? 'Syncing...' : 'Sync from JDS Now' }}
+          Sync from JDS Now
         </button>
 
         <div v-if="syncResult && !syncing" class="result-message" :class="syncResult.success ? 'success' : 'error'">
@@ -390,11 +396,6 @@ onUnmounted(() => {
   font-weight: 600;
 }
 
-.status-badge.running {
-  background: #ffc107;
-  color: #000;
-}
-
 .status-badge.success {
   background: #28a745;
   color: white;
@@ -403,6 +404,78 @@ onUnmounted(() => {
 .status-badge.error {
   background: #dc3545;
   color: white;
+}
+
+.sync-progress-container {
+  background: rgba(255, 255, 255, 0.15);
+  padding: 30px;
+  border-radius: 12px;
+  margin-bottom: 20px;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.progress-header {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.spinner-large {
+  width: 48px;
+  height: 48px;
+  border: 4px solid rgba(255, 255, 255, 0.3);
+  border-top: 4px solid white;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  flex-shrink: 0;
+}
+
+.progress-text h3 {
+  margin: 0 0 8px 0;
+  color: white;
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.progress-text p {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #fff, rgba(255, 255, 255, 0.8));
+  animation: progress-indeterminate 1.5s ease-in-out infinite;
+  width: 30%;
+}
+
+@keyframes progress-indeterminate {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(400%);
+  }
+}
+
+.progress-note {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 13px;
+  text-align: center;
+  font-style: italic;
 }
 
 .btn-sync {
@@ -419,10 +492,6 @@ onUnmounted(() => {
 .btn-sync:hover:not(:disabled) {
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(255, 255, 255, 0.3);
-}
-
-.spinner-icon {
-  animation: spin 1s linear infinite;
 }
 
 @keyframes spin {
