@@ -44,19 +44,17 @@
       </div>
 
       <div v-if="showFilters" class="filters-panel">
-        <div class="filter-group">
-          <label>
-            <input type="checkbox" v-model="filters.inStock" @change="handleFilterChange" />
-            In Stock Only (Available Qty > 0)
-          </label>
+        <div class="filter-info">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <circle cx="12" cy="12" r="10" stroke-width="2"/>
+            <line x1="12" y1="16" x2="12" y2="12" stroke-width="2" stroke-linecap="round"/>
+            <line x1="12" y1="8" x2="12.01" y2="8" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+          <div>
+            <strong>Note:</strong> Inventory levels are not available in bulk search.
+            Click "View Inventory & Pricing" on any product card to see live stock quantities.
+          </div>
         </div>
-        <div class="filter-group">
-          <label>
-            <input type="checkbox" v-model="filters.localStock" @change="handleFilterChange" />
-            Local Stock Only (Local Qty > 0)
-          </label>
-        </div>
-        <button @click="clearFilters" class="btn btn-clear">Clear Filters</button>
       </div>
 
       <div v-if="loading" class="loading">
@@ -222,10 +220,6 @@ const router = useRouter();
 const authStore = useAuthStore();
 
 const searchQuery = ref('');
-const filters = ref({
-  inStock: false,
-  localStock: false
-});
 const showFilters = ref(false);
 const products = ref([]);
 const pagination = ref({
@@ -253,7 +247,7 @@ const performSearch = async (page = 1) => {
   try {
     const result = await productsAPI.search(
       searchQuery.value,
-      filters.value,
+      {},
       page,
       pagination.value.limit
     );
@@ -274,18 +268,6 @@ const handleSearchInput = () => {
   searchTimeout = setTimeout(() => {
     performSearch(1);
   }, 500);
-};
-
-const handleFilterChange = () => {
-  performSearch(1);
-};
-
-const clearFilters = () => {
-  filters.value = {
-    inStock: false,
-    localStock: false
-  };
-  performSearch(1);
 };
 
 const goToPage = (page) => {
@@ -487,38 +469,26 @@ onMounted(() => {
 }
 
 .filters-panel {
-  background: white;
+  background: #fff8e1;
   padding: 20px;
   border-radius: 8px;
   margin-bottom: 24px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-  display: flex;
-  gap: 24px;
-  align-items: center;
+  border-left: 4px solid #ffc107;
 }
 
-.filter-group label {
+.filter-info {
   display: flex;
-  align-items: center;
-  gap: 8px;
-  cursor: pointer;
+  gap: 12px;
+  align-items: flex-start;
+  color: #856404;
   font-size: 14px;
+  line-height: 1.5;
 }
 
-.filter-group input[type="checkbox"] {
-  width: 18px;
-  height: 18px;
-  cursor: pointer;
-}
-
-.btn-clear {
-  background: #f0f0f0;
-  color: #666;
-  margin-left: auto;
-}
-
-.btn-clear:hover {
-  background: #e0e0e0;
+.filter-info svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: #ffc107;
 }
 
 .loading,
