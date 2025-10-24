@@ -42,6 +42,9 @@ router.post('/search', async (req, res) => {
     if (filters.category) {
       where.category = filters.category;
     }
+    if (filters.color) {
+      where.color = filters.color;
+    }
 
     // Execute search
     const [products, total] = await Promise.all([
@@ -222,6 +225,47 @@ router.post('/lookup', async (req, res) => {
 
     res.status(500).json({
       error: 'Failed to lookup products',
+      message: error.message
+    });
+  }
+});
+
+/**
+ * GET /api/products/filters/colors
+ * Get unique colors for filter dropdown
+ */
+router.get('/filters/colors', async (req, res) => {
+  try {
+    const colors = await prisma.product.groupBy({
+      by: ['color'],
+      where: {
+        color: {
+          not: null
+        }
+      },
+      _count: {
+        color: true
+      },
+      orderBy: {
+        _count: {
+          color: 'desc'
+        }
+      }
+    });
+
+    const colorList = colors.map(c => ({
+      color: c.color,
+      count: c._count.color
+    }));
+
+    res.json({
+      success: true,
+      colors: colorList
+    });
+  } catch (error) {
+    console.error('Error fetching colors:', error);
+    res.status(500).json({
+      error: 'Failed to fetch colors',
       message: error.message
     });
   }

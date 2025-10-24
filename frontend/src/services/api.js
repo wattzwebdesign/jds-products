@@ -92,6 +92,11 @@ export const productsAPI = {
   getLiveProduct: async (sku) => {
     const response = await apiClient.get(`/products/${sku}/live`);
     return response.data;
+  },
+
+  getColors: async () => {
+    const response = await apiClient.get('/products/filters/colors');
+    return response.data;
   }
 };
 

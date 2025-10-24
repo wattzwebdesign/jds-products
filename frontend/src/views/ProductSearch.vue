@@ -44,6 +44,33 @@
       </div>
 
       <div v-if="showFilters" class="filters-panel">
+        <div class="filter-section">
+          <label for="color-filter" class="filter-label">Filter by Color:</label>
+          <select
+            id="color-filter"
+            v-model="selectedColor"
+            @change="handleColorChange"
+            class="color-filter-select"
+          >
+            <option value="">All Colors</option>
+            <option
+              v-for="colorOption in availableColors"
+              :key="colorOption.color"
+              :value="colorOption.color"
+            >
+              {{ colorOption.color }} ({{ colorOption.count }})
+            </option>
+          </select>
+          <div v-if="selectedColor" class="color-swatch-display">
+            <div
+              class="color-swatch"
+              :style="{ background: getColorHex(selectedColor) }"
+              :title="selectedColor"
+            ></div>
+            <span class="selected-color-name">{{ selectedColor }}</span>
+          </div>
+        </div>
+
         <div class="filter-info">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
             <circle cx="12" cy="12" r="10" stroke-width="2"/>
@@ -221,6 +248,8 @@ const authStore = useAuthStore();
 
 const searchQuery = ref('');
 const showFilters = ref(false);
+const selectedColor = ref('');
+const availableColors = ref([]);
 const products = ref([]);
 const pagination = ref({
   page: 1,
@@ -245,9 +274,14 @@ const performSearch = async (page = 1) => {
   hasSearched.value = true;
 
   try {
+    const filters = {};
+    if (selectedColor.value) {
+      filters.color = selectedColor.value;
+    }
+
     const result = await productsAPI.search(
       searchQuery.value,
-      {},
+      filters,
       page,
       pagination.value.limit
     );
@@ -281,6 +315,76 @@ const handlePageSizeChange = () => {
   // Reset to page 1 when changing page size
   performSearch(1);
   window.scrollTo({ top: 0, behavior: 'smooth' });
+};
+
+const handleColorChange = () => {
+  performSearch(1);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+};
+
+const loadColors = async () => {
+  try {
+    const result = await productsAPI.getColors();
+    availableColors.value = result.colors || [];
+  } catch (error) {
+    console.error('Failed to load colors:', error);
+  }
+};
+
+// Map common color names to hex values for swatches
+const colorMap = {
+  // Basic colors
+  'BLACK': '#000000',
+  'WHITE': '#FFFFFF',
+  'RED': '#FF0000',
+  'BLUE': '#0000FF',
+  'GREEN': '#008000',
+  'YELLOW': '#FFFF00',
+  'ORANGE': '#FFA500',
+  'PURPLE': '#800080',
+  'PINK': '#FFC0CB',
+  'BROWN': '#8B4513',
+  'GRAY': '#808080',
+  'GREY': '#808080',
+  'SILVER': '#C0C0C0',
+  'GOLD': '#FFD700',
+  'CLEAR': '#FFFFFF',
+  'TRANSPARENT': '#FFFFFF',
+
+  // Shades
+  'LIGHT BLUE': '#ADD8E6',
+  'DARK BLUE': '#00008B',
+  'NAVY': '#000080',
+  'ROYAL BLUE': '#4169E1',
+  'SKY BLUE': '#87CEEB',
+  'LIGHT GREEN': '#90EE90',
+  'DARK GREEN': '#006400',
+  'LIME': '#00FF00',
+  'OLIVE': '#808000',
+  'LIGHT GRAY': '#D3D3D3',
+  'DARK GRAY': '#A9A9A9',
+  'CHARCOAL': '#36454F',
+};
+
+const getColorHex = (colorName) => {
+  if (!colorName) return '#CCCCCC';
+
+  const upper = colorName.toUpperCase().trim();
+
+  // Direct match
+  if (colorMap[upper]) {
+    return colorMap[upper];
+  }
+
+  // Partial match
+  for (const [key, value] of Object.entries(colorMap)) {
+    if (upper.includes(key) || key.includes(upper)) {
+      return value;
+    }
+  }
+
+  // Default to gray for unknown colors
+  return '#CCCCCC';
 };
 
 const handleProductClick = async (product) => {
@@ -344,6 +448,8 @@ const getLocalQty = (product) => {
 onMounted(() => {
   // Perform initial search to show all products
   performSearch(1);
+  // Load available colors for filter
+  loadColors();
 });
 </script>
 
@@ -469,11 +575,69 @@ onMounted(() => {
 }
 
 .filters-panel {
-  background: #fff8e1;
+  background: white;
   padding: 20px;
   border-radius: 8px;
   margin-bottom: 24px;
-  border-left: 4px solid #ffc107;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.filter-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.filter-label {
+  font-weight: 600;
+  color: #333;
+  font-size: 14px;
+}
+
+.color-filter-select {
+  padding: 10px 14px;
+  border: 2px solid #ddd;
+  border-radius: 6px;
+  font-size: 14px;
+  color: #333;
+  background: white;
+  cursor: pointer;
+  transition: all 0.2s;
+  max-width: 300px;
+}
+
+.color-filter-select:hover {
+  border-color: #667eea;
+}
+
+.color-filter-select:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.color-swatch-display {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.color-swatch {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  border: 2px solid #e0e0e0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.selected-color-name {
+  font-size: 14px;
+  color: #666;
+  font-weight: 500;
 }
 
 .filter-info {
@@ -481,8 +645,12 @@ onMounted(() => {
   gap: 12px;
   align-items: flex-start;
   color: #856404;
-  font-size: 14px;
+  font-size: 13px;
   line-height: 1.5;
+  background: #fff8e1;
+  padding: 12px;
+  border-radius: 6px;
+  border-left: 3px solid #ffc107;
 }
 
 .filter-info svg {
