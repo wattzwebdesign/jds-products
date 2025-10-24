@@ -4,6 +4,22 @@
  * Routes all requests from /api/* to http://localhost:3000/api/*
  */
 
+// Debug mode - set to false in production
+$debugMode = isset($_GET['debug']) ? true : false;
+
+if ($debugMode) {
+    header('Content-Type: application/json');
+    echo json_encode([
+        'message' => 'API Proxy Debug Info',
+        'REQUEST_URI' => $_SERVER['REQUEST_URI'],
+        'SCRIPT_NAME' => $_SERVER['SCRIPT_NAME'],
+        'PATH_INFO' => $_SERVER['PATH_INFO'] ?? 'NOT SET',
+        'QUERY_STRING' => $_SERVER['QUERY_STRING'] ?? '',
+        'REQUEST_METHOD' => $_SERVER['REQUEST_METHOD']
+    ], JSON_PRETTY_PRINT);
+    exit();
+}
+
 // Enable CORS
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
@@ -15,18 +31,43 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit();
 }
 
-// Get the request path
+// Get the request path - handle multiple formats
 $requestUri = $_SERVER['REQUEST_URI'];
-$scriptName = $_SERVER['SCRIPT_NAME'];
 
-// Extract the API path
-$apiPath = str_replace(dirname($scriptName) . '/api.php', '', $requestUri);
+// Try multiple methods to extract the API path
+if (isset($_SERVER['PATH_INFO'])) {
+    // Method 1: PATH_INFO is set
+    $apiPath = $_SERVER['PATH_INFO'];
+} else {
+    // Method 2: Extract from REQUEST_URI
+    // Remove query string
+    $path = parse_url($requestUri, PHP_URL_PATH);
+
+    // Remove /api.php prefix if present
+    if (strpos($path, '/api.php/') === 0) {
+        $apiPath = substr($path, 8); // Remove '/api.php'
+    } elseif (strpos($path, '/api.php') === 0) {
+        $apiPath = '/health'; // Default test endpoint
+    } else {
+        $apiPath = $path;
+    }
+}
+
+// Ensure path starts with /
 if (empty($apiPath) || $apiPath === '/') {
-    $apiPath = '/';
+    $apiPath = '/health';
+}
+if ($apiPath[0] !== '/') {
+    $apiPath = '/' . $apiPath;
 }
 
 // Backend URL
 $backendUrl = 'http://localhost:3000' . $apiPath;
+
+// Add query string if present
+if (isset($_SERVER['QUERY_STRING']) && !empty($_SERVER['QUERY_STRING'])) {
+    $backendUrl .= '?' . $_SERVER['QUERY_STRING'];
+}
 
 // Get request method
 $method = $_SERVER['REQUEST_METHOD'];
