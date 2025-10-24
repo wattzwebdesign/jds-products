@@ -260,7 +260,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { useAuthStore } from '../stores/auth';
 import { productsAPI } from '../services/api';
@@ -566,6 +566,21 @@ onMounted(() => {
 
   // Perform initial search (with URL params if present, or show all products)
   performSearch(urlPage, false); // false = don't update URL again
+});
+
+// Watch for route changes (e.g., clicking "All Products" link)
+watch(() => route.query, (newQuery, oldQuery) => {
+  // If query params are cleared (navigating to /products without params)
+  if (Object.keys(newQuery).length === 0 && Object.keys(oldQuery).length > 0) {
+    // Reset search and show all products
+    searchQuery.value = '';
+    selectedColor.value = '';
+    colorSearchQuery.value = '';
+    showColorDropdown.value = false;
+    showFilters.value = false;
+    errorMessage.value = '';
+    performSearch(1, false);
+  }
 });
 </script>
 
