@@ -6,13 +6,11 @@ import { PrismaClient } from '@prisma/client';
 const router = express.Router();
 const prisma = new PrismaClient();
 
-// All product routes require authentication
-router.use(authenticateToken);
-
 /**
  * POST /api/products/search
  * Body: { query, filters: { inStock, localStock, category }, page, limit }
  * Search products in local database
+ * PUBLIC ENDPOINT - No authentication required
  */
 router.post('/search', async (req, res) => {
   try {
@@ -79,8 +77,9 @@ router.post('/search', async (req, res) => {
 /**
  * GET /api/products/:sku/live
  * Get live product data from JDS API for a specific SKU
+ * REQUIRES AUTHENTICATION
  */
-router.get('/:sku/live', async (req, res) => {
+router.get('/:sku/live', authenticateToken, async (req, res) => {
   try {
     const { sku } = req.params;
 
@@ -157,8 +156,9 @@ router.get('/:sku/live', async (req, res) => {
 /**
  * POST /api/products/lookup
  * Body: { skus: string[] } or { skuInput: string }
+ * REQUIRES AUTHENTICATION
  */
-router.post('/lookup', async (req, res) => {
+router.post('/lookup', authenticateToken, async (req, res) => {
   try {
     // Get user's JDS API token
     const user = await prisma.user.findUnique({
@@ -252,6 +252,7 @@ router.post('/lookup', async (req, res) => {
 /**
  * GET /api/products/filters/colors
  * Get unique colors for filter dropdown
+ * PUBLIC ENDPOINT - No authentication required
  */
 router.get('/filters/colors', async (req, res) => {
   try {
