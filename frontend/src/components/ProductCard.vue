@@ -71,7 +71,10 @@
       </button>
     </div>
 
-    <!-- Lightbox -->
+  </div>
+
+  <!-- Lightbox - Teleport to body to avoid positioning issues -->
+  <Teleport to="body">
     <div v-if="showLightbox" class="lightbox-overlay" @click="closeLightbox">
       <button @click="closeLightbox" class="lightbox-close">×</button>
       <div class="lightbox-content" @click.stop>
@@ -79,11 +82,11 @@
         <p class="lightbox-caption">{{ product.name }}</p>
       </div>
     </div>
-  </div>
+  </Teleport>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, onUnmounted } from 'vue';
 
 const props = defineProps({
   product: {
@@ -151,6 +154,13 @@ const closeLightbox = () => {
   showLightbox.value = false;
   document.body.style.overflow = ''; // Restore scrolling
 };
+
+// Cleanup: Ensure body scroll is restored if component unmounts while lightbox is open
+onUnmounted(() => {
+  if (showLightbox.value) {
+    document.body.style.overflow = '';
+  }
+});
 </script>
 
 <style scoped>
