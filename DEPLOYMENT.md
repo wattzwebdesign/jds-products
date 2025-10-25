@@ -23,7 +23,7 @@ NODE_ENV=production
 Create a `frontend/.env` file on your server with:
 
 ```env
-VITE_API_BASE_URL=https://billowing-sands-167650.1wp.site
+VITE_API_BASE_URL=https://brandedgiftsandpromo.com
 ```
 
 ## Deployment Steps
@@ -173,7 +173,7 @@ An automatic product synchronization system that downloads and imports products 
    Look for: `[Scheduler] Scheduled: Product import every Sunday at midnight`
 
 2. **Test Manual Sync**:
-   - Login to admin panel: `https://your-site.1wp.site/#/admin`
+   - Login to admin panel: `https://brandedgiftsandpromo.com/#/admin`
    - Click "Sync from JDS Now" button
    - Should see "Import started in background" immediately
    - Status updates every 2 seconds showing progress

@@ -23,7 +23,7 @@ RewriteRule ^(.*)$ /index.html [L]
 
 # Enable CORS for API requests
 <IfModule mod_headers.c>
-    SetEnvIf Origin "^https?://(.*\.)?billowing-sands-167650\.1wp\.site$" ORIGIN_DOMAIN=$0
+    SetEnvIf Origin "^https?://(.*\.)?brandedgiftsandpromo\.com$" ORIGIN_DOMAIN=$0
     Header set Access-Control-Allow-Origin "%{ORIGIN_DOMAIN}e" env=ORIGIN_DOMAIN
     Header set Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS"
     Header set Access-Control-Allow-Headers "Content-Type, Authorization"

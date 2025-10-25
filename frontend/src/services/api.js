@@ -5,7 +5,7 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000
 // Create axios instance
 // Note: For production (nginx), we use api.php with query parameters
 // For development (local), we use direct API calls
-const isProduction = API_BASE_URL.includes('1wp.site');
+const isProduction = API_BASE_URL.includes('1wp.site') || API_BASE_URL.includes('brandedgiftsandpromo.com');
 const apiClient = axios.create({
   baseURL: isProduction ? `${API_BASE_URL}/api.php` : `${API_BASE_URL}/api`,
   headers: {
