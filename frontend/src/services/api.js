@@ -1,6 +1,23 @@
 import axios from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
+// Ensure HTTPS is used in production, localhost HTTP only for development
+const getApiBaseUrl = () => {
+  const envUrl = import.meta.env.VITE_API_BASE_URL;
+
+  if (envUrl) {
+    return envUrl;
+  }
+
+  // Development fallback - only use HTTP for localhost
+  if (import.meta.env.DEV) {
+    return 'http://localhost:3000';
+  }
+
+  // Production fallback - always use HTTPS with current domain
+  return `${window.location.protocol}//${window.location.host}`;
+};
+
+const API_BASE_URL = getApiBaseUrl();
 
 // Create axios instance
 // Note: For production (nginx), we use api.php with query parameters
